@@ -1,4 +1,4 @@
-module eventsub-framework
+module github.com/dnsge/twitch-eventsub-framework
 
 go 1.17
 
