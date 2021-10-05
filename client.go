@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	esb "github.com/dnsge/twitch-eventsub-bindings"
 	"net/http"
 	"time"
@@ -12,8 +13,8 @@ import (
 const EventSubSubscriptionsEndpoint = "https://api.twitch.tv/helix/eventsub/subscriptions"
 
 type Credentials interface {
-	ClientID() string
-	AppToken() string
+	ClientID() (string, error)
+	AppToken() (string, error)
 }
 
 type SubRequest struct {
@@ -38,8 +39,18 @@ func NewSubClient(credentials Credentials) *SubClient {
 }
 
 func (s *SubClient) Do(req *http.Request) (*http.Response, error) {
-	req.Header.Set("Client-ID", s.credentials.ClientID())
-	req.Header.Set("Authorization", "Bearer "+s.credentials.AppToken())
+	clientID, err := s.credentials.ClientID()
+	if err != nil {
+		return nil, fmt.Errorf("get client id: %w", err)
+	}
+
+	appToken, err := s.credentials.AppToken()
+	if err != nil {
+		return nil, fmt.Errorf("get app token: %w", err)
+	}
+
+	req.Header.Set("Client-ID", clientID)
+	req.Header.Set("Authorization", "Bearer "+appToken)
 	if req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
