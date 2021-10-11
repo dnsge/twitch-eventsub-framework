@@ -114,7 +114,7 @@ func (s *SubHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if s.IDTracker != nil {
-			duplicate, err := s.IDTracker.AddAndCheckIfDuplicate(h.MessageID)
+			duplicate, err := s.IDTracker.AddAndCheckIfDuplicate(r.Context(), h.MessageID)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
