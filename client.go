@@ -149,8 +149,6 @@ func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (
 		reqUrl = u.String()
 	}
 
-	fmt.Println(reqUrl)
-
 	req, err := http.NewRequestWithContext(ctx, "GET", reqUrl, nil)
 	if err != nil {
 		return nil, err
