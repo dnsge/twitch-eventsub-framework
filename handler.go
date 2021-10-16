@@ -123,7 +123,7 @@ func (s *SubHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				if s.OnDuplicateNotification != nil {
 					go s.OnDuplicateNotification(&h)
 				}
-				http.Error(w, "Duplicate message id", http.StatusBadRequest)
+				w.WriteHeader(http.StatusNoContent) // ignore and return 2XX code
 				return
 			}
 		}
