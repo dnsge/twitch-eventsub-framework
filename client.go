@@ -37,6 +37,28 @@ const (
 	StatusUserRemoved          Status = "user_removed"
 )
 
+// TwitchError describes an error from the Twitch API.
+//
+// For example:
+//  {
+//    "error": "Unauthorized",
+//    "status": 401,
+//    "message": "Invalid OAuth token"
+//  }
+type TwitchError struct {
+	ErrorText string `json:"error"`
+	Status    int    `json:"status"`
+	Message   string `json:"message"`
+}
+
+func (t *TwitchError) Error() string {
+	if t.Message != "" {
+		return fmt.Sprintf("%d %s: %s", t.Status, t.ErrorText, t.Message)
+	} else {
+		return fmt.Sprintf("%d %s", t.Status, t.ErrorText)
+	}
+}
+
 type SubClient struct {
 	httpClient  http.Client
 	credentials Credentials
@@ -67,7 +89,21 @@ func (s *SubClient) do(req *http.Request) (*http.Response, error) {
 	if req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	return s.httpClient.Do(req)
+
+	res, err := s.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		var twitchErr TwitchError
+		if err := json.NewDecoder(res.Body).Decode(&twitchErr); err != nil {
+			return nil, fmt.Errorf("process %d twitch api status: %w", res.StatusCode, err)
+		}
+		return nil, &twitchErr
+	}
+
+	return res, nil
 }
 
 func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*esb.RequestStatus, error) {
