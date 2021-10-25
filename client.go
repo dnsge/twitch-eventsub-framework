@@ -11,7 +11,11 @@ import (
 	"time"
 )
 
-const EventSubSubscriptionsEndpoint = "https://api.twitch.tv/helix/eventsub/subscriptions"
+const (
+	EventSubSubscriptionsEndpoint = "https://api.twitch.tv/helix/eventsub/subscriptions"
+
+	pageSize = "1"
+)
 
 type Credentials interface {
 	ClientID() (string, error)
@@ -171,20 +175,58 @@ func (s *SubClient) Unsubscribe(ctx context.Context, subscriptionID string) erro
 // GetSubscriptions returns all EventSub subscriptions.
 // If statusFilter != StatusAny, it will apply the filter to the query.
 func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (*esb.RequestStatus, error) {
-	var reqUrl string
-	if statusFilter == StatusAny {
-		reqUrl = EventSubSubscriptionsEndpoint
-	} else {
-		u, err := url.Parse(EventSubSubscriptionsEndpoint)
-		if err != nil {
-			return nil, fmt.Errorf("get subscriptions: parse EventSubSubscriptionsEndpoint url: %w", err)
-		}
-		q := u.Query()
-		q.Set("status", string(statusFilter))
-		u.RawQuery = q.Encode()
-		reqUrl = u.String()
+	firstReq, err := s.getSubscriptions(ctx, statusFilter, "")
+	if err != nil {
+		return nil, err
 	}
 
+	if firstReq.Pagination == nil || firstReq.Pagination.Cursor == "" {
+		// No pagination was specified.
+		return firstReq, nil
+	}
+
+	cursor := firstReq.Pagination.Cursor
+
+	// arbitrary number over 100, the maximum number of pages
+	for i := 1; i < 105; i++ {
+		nextReq, err := s.getSubscriptions(ctx, statusFilter, cursor)
+		if err != nil {
+			return nil, err
+		}
+
+		// Combine data from each page into firstReq
+		firstReq.Data = append(firstReq.Data, nextReq.Data...)
+
+		if nextReq.Pagination == nil || nextReq.Pagination.Cursor == "" {
+			return firstReq, nil
+		} else {
+			cursor = nextReq.Pagination.Cursor
+		}
+		i++
+	}
+
+	return nil, fmt.Errorf("caught in loop while following pagination")
+}
+
+func (s *SubClient) getSubscriptions(ctx context.Context, statusFilter Status, cursor string) (*esb.RequestStatus, error) {
+	// First, construct the request url with the proper query parameters.
+	u, err := url.Parse(EventSubSubscriptionsEndpoint)
+	if err != nil {
+		return nil, fmt.Errorf("get subscriptions: parse EventSubSubscriptionsEndpoint url: %w", err)
+	}
+
+	q := u.Query()
+	q.Set("first", pageSize)
+	if statusFilter != StatusAny {
+		q.Set("status", string(statusFilter))
+	}
+	if cursor != "" {
+		q.Set("after", cursor)
+	}
+	u.RawQuery = q.Encode()
+	reqUrl := u.String()
+
+	// Now, actually send the request.
 	req, err := http.NewRequestWithContext(ctx, "GET", reqUrl, nil)
 	if err != nil {
 		return nil, err
