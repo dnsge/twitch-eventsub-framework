@@ -14,7 +14,7 @@ import (
 const (
 	EventSubSubscriptionsEndpoint = "https://api.twitch.tv/helix/eventsub/subscriptions"
 
-	pageSize = "1"
+	pageSize = "100"
 )
 
 type Credentials interface {
