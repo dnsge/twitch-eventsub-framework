@@ -87,12 +87,12 @@ func NewSubHandler(doSignatureVerification bool, secret []byte) *SubHandler {
 
 func (s *SubHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
+		defer r.Body.Close()
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		_ = r.Body.Close()
 
 		if s.doSignatureVerification {
 			valid, err := VerifyRequestSignature(r, bodyBytes, s.signatureSecret)
