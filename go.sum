@@ -1,7 +1,3 @@
-github.com/dnsge/twitch-eventsub-bindings v0.0.0-20211003235632-56a22f989c68 h1:7TZUGi3mG2fyLGQAL/pa0qFGOYYjloypDB4suJHebAM=
-github.com/dnsge/twitch-eventsub-bindings v0.0.0-20211003235632-56a22f989c68/go.mod h1:Zbj+TpgcdNu4Gj6+6KG/+A7EvWMDbzQ+UGm35P918pc=
-github.com/dnsge/twitch-eventsub-bindings v0.0.0-20211016203156-a1ce71b8e521 h1:kZF6eG+xDN1a53jiHE4ZPRtn/NJrQCGCsCiK0p6dlP8=
-github.com/dnsge/twitch-eventsub-bindings v0.0.0-20211016203156-a1ce71b8e521/go.mod h1:Zbj+TpgcdNu4Gj6+6KG/+A7EvWMDbzQ+UGm35P918pc=
 github.com/dnsge/twitch-eventsub-bindings v0.0.0-20211025032511-9c30a4c90402 h1:CPN8ttS7GrttLmydu2emfWAafbE09ZuD8+xfOpqmmr4=
 github.com/dnsge/twitch-eventsub-bindings v0.0.0-20211025032511-9c30a4c90402/go.mod h1:Zbj+TpgcdNu4Gj6+6KG/+A7EvWMDbzQ+UGm35P918pc=
 github.com/mozillazg/go-httpheader v0.3.0 h1:3brX5z8HTH+0RrNA1362Rc3HsaxyWEKtGY45YrhuINM=

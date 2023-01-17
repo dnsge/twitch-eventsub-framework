@@ -23,10 +23,14 @@ type Credentials interface {
 }
 
 type SubRequest struct {
-	Type      string
+	// The type of event being subscribed to.
+	Type string
+	// The parameters under which the event will be fired.
 	Condition interface{}
-	Callback  string
-	Secret    string
+	// The Webhook HTTP callback address.
+	Callback string
+	// The HMAC secret used to verify the event data.
+	Secret string
 }
 
 type Status string
@@ -38,7 +42,9 @@ const (
 	StatusVerificationFailed   Status = "webhook_callback_verification_failed"
 	StatusFailuresExceeded     Status = "notification_failures_exceeded"
 	StatusAuthorizationRevoked Status = "authorization_revoked"
+	StatusModeratorRemoved     Status = "moderator_removed"
 	StatusUserRemoved          Status = "user_removed"
+	StatusVersionRemoved       Status = "version_removed"
 )
 
 // TwitchError describes an error from the Twitch API.
@@ -64,19 +70,34 @@ func (t *TwitchError) Error() string {
 }
 
 type SubClient struct {
-	httpClient  http.Client
+	httpClient  *http.Client
 	credentials Credentials
 }
 
+// NewSubClient creates a new SubClient with the given Credentials provider.
 func NewSubClient(credentials Credentials) *SubClient {
 	return &SubClient{
-		httpClient: http.Client{
+		httpClient: &http.Client{
 			Timeout: time.Second * 3,
 		},
 		credentials: credentials,
 	}
 }
 
+// NewSubClientHTTP creates a new SubClient with the given Credentials provider
+// and http.Client instance.
+func NewSubClientHTTP(credentials Credentials, client *http.Client) *SubClient {
+	return &SubClient{
+		httpClient:  client,
+		credentials: credentials,
+	}
+}
+
+// Performs a given http.Request while adding the Client-ID and Authorization
+// headers to the request.
+//
+// If the returned error is non-nil, the caller must  close the returned
+// response body. The returned response is guaranteed to have a 2xx status code.
 func (s *SubClient) do(req *http.Request) (*http.Response, error) {
 	clientID, err := s.credentials.ClientID()
 	if err != nil {
@@ -100,6 +121,7 @@ func (s *SubClient) do(req *http.Request) (*http.Response, error) {
 	}
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		defer res.Body.Close()
 		var twitchErr TwitchError
 		if err := json.NewDecoder(res.Body).Decode(&twitchErr); err != nil {
 			return nil, fmt.Errorf("process %d twitch api status: %w", res.StatusCode, err)
@@ -110,6 +132,7 @@ func (s *SubClient) do(req *http.Request) (*http.Response, error) {
 	return res, nil
 }
 
+// Subscribe creates a new Webhook subscription.
 func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*esb.RequestStatus, error) {
 	reqJSON := esb.Request{
 		Type:      srq.Type,
@@ -137,15 +160,17 @@ func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*esb.Reques
 		return nil, err
 	}
 
+	defer res.Body.Close()
+
 	var statusResponse esb.RequestStatus
 	if err := json.NewDecoder(res.Body).Decode(&statusResponse); err != nil {
 		return nil, err
 	}
-	_ = res.Body.Close()
 
 	return &statusResponse, nil
 }
 
+// Unsubscribe deletes a Webhook subscription by the subscription's ID.
 func (s *SubClient) Unsubscribe(ctx context.Context, subscriptionID string) error {
 	u, err := url.Parse(EventSubSubscriptionsEndpoint)
 	if err != nil {
@@ -165,42 +190,42 @@ func (s *SubClient) Unsubscribe(ctx context.Context, subscriptionID string) erro
 		return err
 	}
 
-	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return fmt.Errorf("unsubscribe: bad status code %d (%s)", res.StatusCode, http.StatusText(res.StatusCode))
-	}
-
+	// Performing the HTTP request did not return an error, so the status code
+	// must have been a 2xx. No need to worry about reading the (possible) body.
+	_ = res.Body.Close()
 	return nil
 }
 
 // GetSubscriptions returns all EventSub subscriptions.
 // If statusFilter != StatusAny, it will apply the filter to the query.
 func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (*esb.RequestStatus, error) {
-	firstReq, err := s.getSubscriptions(ctx, statusFilter, "")
+	firstRes, err := s.getSubscriptions(ctx, statusFilter, "")
 	if err != nil {
 		return nil, err
 	}
 
-	if firstReq.Pagination == nil || firstReq.Pagination.Cursor == "" {
+	if firstRes.Pagination == nil || firstRes.Pagination.Cursor == "" {
 		// No pagination was specified.
-		return firstReq, nil
+		return firstRes, nil
 	}
 
-	cursor := firstReq.Pagination.Cursor
+	cursor := firstRes.Pagination.Cursor
 
 	// arbitrary number over 100, the maximum number of pages
 	for i := 1; i < 105; i++ {
-		nextReq, err := s.getSubscriptions(ctx, statusFilter, cursor)
+		nextRes, err := s.getSubscriptions(ctx, statusFilter, cursor)
 		if err != nil {
 			return nil, err
 		}
 
 		// Combine data from each page into firstReq
-		firstReq.Data = append(firstReq.Data, nextReq.Data...)
+		firstRes.Data = append(firstRes.Data, nextRes.Data...)
 
-		if nextReq.Pagination == nil || nextReq.Pagination.Cursor == "" {
-			return firstReq, nil
+		if nextRes.Pagination == nil || nextRes.Pagination.Cursor == "" {
+			// Done with all the pages
+			return firstRes, nil
 		} else {
-			cursor = nextReq.Pagination.Cursor
+			cursor = nextRes.Pagination.Cursor
 		}
 		i++
 	}
@@ -208,6 +233,7 @@ func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (
 	return nil, fmt.Errorf("caught in loop while following pagination")
 }
 
+// Get the subscriptions with a specific pagination cursor
 func (s *SubClient) getSubscriptions(ctx context.Context, statusFilter Status, cursor string) (*esb.RequestStatus, error) {
 	// First, construct the request url with the proper query parameters.
 	u, err := url.Parse(EventSubSubscriptionsEndpoint)
@@ -236,11 +262,12 @@ func (s *SubClient) getSubscriptions(ctx context.Context, statusFilter Status, c
 		return nil, err
 	}
 
+	defer res.Body.Close()
+
 	var subscriptionsResponse esb.RequestStatus
 	if err := json.NewDecoder(res.Body).Decode(&subscriptionsResponse); err != nil {
 		return nil, err
 	}
-	_ = res.Body.Close()
 
 	return &subscriptionsResponse, nil
 }
