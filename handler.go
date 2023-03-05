@@ -489,7 +489,8 @@ func (s *SubHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Length", "0")
+			w.WriteHeader(http.StatusNoContent)
 		} else {
 			http.Error(w, "Unknown message type", http.StatusBadRequest)
 			return
