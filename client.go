@@ -111,7 +111,8 @@ func (s *SubClient) do(req *http.Request) (*http.Response, error) {
 
 	req.Header.Set("Client-ID", clientID)
 	req.Header.Set("Authorization", "Bearer "+appToken)
-	if req.Header.Get("Content-Type") == "" {
+	req.Header.Set("Accept", "application/json")
+	if req.Body != nil && req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
