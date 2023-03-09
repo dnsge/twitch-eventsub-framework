@@ -13,6 +13,12 @@ const (
 	notificationMessageType     = "notification"
 )
 
+// SubHandler implements http.Handler to receive Twitch webhook notifications.
+//
+// SubHandler handles both verification of new subscriptions and dispatching of
+// event notifications. To handle a specific event, set the corresponding
+// HandleXXX struct field. When a notification is received and validated, the
+// handler function will be invoked in a new goroutine.
 type SubHandler struct {
 	doSignatureVerification bool
 	signatureSecret         []byte
