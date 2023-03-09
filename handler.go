@@ -113,34 +113,17 @@ func (s *SubHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if s.IDTracker != nil {
-			duplicate, err := s.IDTracker.AddAndCheckIfDuplicate(r.Context(), h.MessageID)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			if duplicate {
-				if s.OnDuplicateNotification != nil {
-					go s.OnDuplicateNotification(&h)
-				}
-				w.WriteHeader(http.StatusNoContent) // ignore and return 2XX code
-				return
-			}
+		isDuplicate, err := s.checkIfDuplicate(w, r, &h)
+		if err != nil {
+			// Error occurred while checking IDTracker
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		} else if isDuplicate {
+			return // already handled response
 		}
 
 		if h.MessageType == webhookCallbackVerification {
-			var data esb.SubscriptionChallenge
-			if err := json.Unmarshal(bodyBytes, &data); err != nil {
-				http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-				return
-			}
-			if s.VerifyChallenge == nil || s.VerifyChallenge(&h, &data) {
-				w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(data.Challenge))
-			} else {
-				http.Error(w, "Invalid subscription", http.StatusBadRequest)
-			}
+			s.handleVerification(w, bodyBytes, &h)
 			return
 		} else if h.MessageType == notificationMessageType {
 			var notification esb.EventNotification
@@ -497,5 +480,43 @@ func (s *SubHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// checkIfDuplicate returns whether the IDTracker reports this notification is
+// a duplicate. If it is a duplicate, it writes a 2xx response and returns true.
+// Otherwise, it returns false.
+func (s *SubHandler) checkIfDuplicate(w http.ResponseWriter, r *http.Request, h *esb.ResponseHeaders) (bool, error) {
+	if s.IDTracker != nil {
+		duplicate, err := s.IDTracker.AddAndCheckIfDuplicate(r.Context(), h.MessageID)
+		if err != nil {
+			return false, err
+		}
+
+		if duplicate {
+			if s.OnDuplicateNotification != nil {
+				go s.OnDuplicateNotification(h)
+			}
+			w.WriteHeader(http.StatusNoContent) // ignore and return 2XX code
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (s *SubHandler) handleVerification(w http.ResponseWriter, bodyBytes []byte, headers *esb.ResponseHeaders) {
+	var data esb.SubscriptionChallenge
+	if err := json.Unmarshal(bodyBytes, &data); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	if s.VerifyChallenge == nil || s.VerifyChallenge(headers, &data) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(data.Challenge))
+	} else {
+		http.Error(w, "Invalid subscription", http.StatusBadRequest)
 	}
 }
