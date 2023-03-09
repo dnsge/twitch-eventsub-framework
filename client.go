@@ -17,11 +17,6 @@ const (
 	pageSize = "100"
 )
 
-type Credentials interface {
-	ClientID() (string, error)
-	AppToken() (string, error)
-}
-
 type SubRequest struct {
 	// The type of event being subscribed to.
 	Type string
