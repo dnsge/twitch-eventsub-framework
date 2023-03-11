@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	esb "github.com/dnsge/twitch-eventsub-bindings"
 	"net/http"
 	"net/url"
 	"time"
+
+	esb "github.com/dnsge/twitch-eventsub-bindings"
 )
 
 const (
@@ -26,6 +27,8 @@ type SubRequest struct {
 	Callback string
 	// The HMAC secret used to verify the event data.
 	Secret string
+	// The subscription type version.
+	Version string
 }
 
 type Status string
@@ -45,11 +48,12 @@ const (
 // TwitchError describes an error from the Twitch API.
 //
 // For example:
-//  {
-//    "error": "Unauthorized",
-//    "status": 401,
-//    "message": "Invalid OAuth token"
-//  }
+//
+//	{
+//	  "error": "Unauthorized",
+//	  "status": 401,
+//	  "message": "Invalid OAuth token"
+//	}
 type TwitchError struct {
 	ErrorText string `json:"error"`
 	Status    int    `json:"status"`
@@ -130,9 +134,14 @@ func (s *SubClient) do(req *http.Request) (*http.Response, error) {
 
 // Subscribe creates a new Webhook subscription.
 func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*esb.RequestStatus, error) {
+	// set default version to 1, so we can omit that parameter in request for backward compatibility
+	if srq.Version == "" {
+		srq.Version = "1"
+	}
+
 	reqJSON := esb.Request{
 		Type:      srq.Type,
-		Version:   "1",
+		Version:   srq.Version,
 		Condition: srq.Condition,
 		Transport: esb.Transport{
 			Method:   "webhook",
