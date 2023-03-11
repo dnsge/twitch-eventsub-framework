@@ -27,7 +27,7 @@ type SubRequest struct {
 	Callback string
 	// The HMAC secret used to verify the event data.
 	Secret string
-	// The subscription type version
+	// The subscription type version.
 	Version string
 }
 
