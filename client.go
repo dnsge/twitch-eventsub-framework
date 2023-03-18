@@ -232,7 +232,6 @@ func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (
 		} else {
 			cursor = nextRes.Pagination.Cursor
 		}
-		i++
 	}
 
 	return nil, fmt.Errorf("caught in loop while following pagination")
