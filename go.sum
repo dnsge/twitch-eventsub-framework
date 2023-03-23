@@ -1,8 +1,8 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dnsge/twitch-eventsub-bindings v1.0.0 h1:079euA+NvfyPQG2IUncyZ0rGpT3QAK+0KSh9lE8RgFM=
-github.com/dnsge/twitch-eventsub-bindings v1.0.0/go.mod h1:Zbj+TpgcdNu4Gj6+6KG/+A7EvWMDbzQ+UGm35P918pc=
+github.com/dnsge/twitch-eventsub-bindings v1.1.0 h1:11MBREP4tdcxfGNxDRSu86ASxlnMsSCo0YnLV01T0Ws=
+github.com/dnsge/twitch-eventsub-bindings v1.1.0/go.mod h1:Zbj+TpgcdNu4Gj6+6KG/+A7EvWMDbzQ+UGm35P918pc=
 github.com/mozillazg/go-httpheader v0.3.0 h1:3brX5z8HTH+0RrNA1362Rc3HsaxyWEKtGY45YrhuINM=
 github.com/mozillazg/go-httpheader v0.3.0/go.mod h1:PuT8h0pw6efvp8ZeUec1Rs7dwjK08bt6gKSReGMqtdA=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
