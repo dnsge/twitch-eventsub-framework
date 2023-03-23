@@ -26,9 +26,15 @@ func TestSubHandler_ServeHTTP_VerificationBasic(t *testing.T) {
 
 func TestSubHandler_ServeHTTP_VerificationInvalidSignature(t *testing.T) {
 	handler := NewSubHandler(true, []byte(secret))
+
+	// Test invalid signature
 	res := handleRequest(handler, newBadVerificationRequest)
 	_ = res.Body.Close()
+	assert.Equal(t, res.StatusCode, http.StatusForbidden)
 
+	// Test request with malformed signature
+	res = handleRequest(handler, newInvalidVerificationRequest)
+	_ = res.Body.Close()
 	assert.Equal(t, res.StatusCode, http.StatusForbidden)
 }
 
@@ -108,6 +114,13 @@ func newVerificationRequest() *http.Request {
 		"Twitch-Eventsub-Subscription-Version":             {"1"},
 	}
 
+	return req
+}
+
+func newInvalidVerificationRequest() *http.Request {
+	req := newVerificationRequest()
+	// overwrite header with invalid signature
+	req.Header.Set("Twitch-Eventsub-Message-Signature", "hey this is not valid")
 	return req
 }
 

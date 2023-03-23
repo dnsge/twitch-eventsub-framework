@@ -109,10 +109,7 @@ func (s *SubHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.doSignatureVerification {
-		if valid, err := VerifyRequestSignature(r, bodyBytes, s.signatureSecret); err != nil {
-			http.Error(w, "Internal Server Error", http.StatusBadRequest)
-			return
-		} else if !valid {
+		if valid, err := VerifyRequestSignature(r, bodyBytes, s.signatureSecret); err != nil || !valid {
 			http.Error(w, "Invalid request signature", http.StatusForbidden)
 			return
 		}
