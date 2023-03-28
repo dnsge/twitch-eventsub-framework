@@ -158,7 +158,7 @@ func (s *SubHandler) checkIfDuplicate(w http.ResponseWriter, r *http.Request, h 
 			if s.OnDuplicateNotification != nil {
 				go s.OnDuplicateNotification(h)
 			}
-			writeEmpty(w) // ignore and return 2XX code
+			writeEmptyOK(w) // ignore and return 2XX code
 			return true, nil
 		}
 	}
@@ -529,11 +529,11 @@ func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte,
 		return
 	}
 
-	writeEmpty(w)
+	writeEmptyOK(w)
 }
 
-// Writes a 204 No Content with Content-Length: 0 response
-func writeEmpty(w http.ResponseWriter) {
-	w.Header().Set("Content-Length", "0")
-	w.WriteHeader(http.StatusNoContent)
+// Writes a 200 OK response
+func writeEmptyOK(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("OK"))
 }
