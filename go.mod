@@ -2,6 +2,8 @@ module github.com/dnsge/twitch-eventsub-framework
 
 go 1.17
 
+replace github.com/dnsge/twitch-eventsub-bindings => ../twitch-eventsub-bindings
+
 require (
 	github.com/dnsge/twitch-eventsub-bindings v1.1.0
 	github.com/mozillazg/go-httpheader v0.3.0
