@@ -623,7 +623,13 @@ func (s *SubHandler) handleNotification(
 		}
 	case "channel.chat.notification":
 		var data esb.EventChannelChatNotification
-
+		if err := json.Unmarshal(event, &data); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+		if s.HandleChannelChatNotification != nil {
+			go s.HandleChannelChatNotification(h, &data)
+		}
 	default:
 		http.Error(w, "Unknown notification type", http.StatusBadRequest)
 		return
