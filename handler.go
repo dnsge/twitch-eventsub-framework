@@ -2,10 +2,11 @@ package eventsub_framework
 
 import (
 	"encoding/json"
-	esb "github.com/dnsge/twitch-eventsub-bindings"
-	"github.com/mozillazg/go-httpheader"
 	"io"
 	"net/http"
+
+	esb "github.com/dnsge/twitch-eventsub-bindings"
+	"github.com/mozillazg/go-httpheader"
 )
 
 const (
@@ -35,35 +36,74 @@ type SubHandler struct {
 	HandleChannelFollow func(h *esb.ResponseHeaders, event *esb.EventChannelFollow)
 	HandleUserUpdate    func(h *esb.ResponseHeaders, event *esb.EventUserUpdate)
 
-	HandleChannelSubscribe           func(h *esb.ResponseHeaders, event *esb.EventChannelSubscribe)
-	HandleChannelSubscriptionEnd     func(h *esb.ResponseHeaders, event *esb.EventChannelSubscriptionEnd)
-	HandleChannelSubscriptionGift    func(h *esb.ResponseHeaders, event *esb.EventChannelSubscriptionGift)
-	HandleChannelSubscriptionMessage func(h *esb.ResponseHeaders, event *esb.EventChannelSubscriptionMessage)
-	HandleChannelCheer               func(h *esb.ResponseHeaders, event *esb.EventChannelCheer)
-	HandleChannelRaid                func(h *esb.ResponseHeaders, event *esb.EventChannelRaid)
+	HandleChannelSubscribe       func(h *esb.ResponseHeaders, event *esb.EventChannelSubscribe)
+	HandleChannelSubscriptionEnd func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelSubscriptionEnd,
+	)
+	HandleChannelSubscriptionGift func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelSubscriptionGift,
+	)
+	HandleChannelSubscriptionMessage func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelSubscriptionMessage,
+	)
+	HandleChannelCheer func(h *esb.ResponseHeaders, event *esb.EventChannelCheer)
+	HandleChannelRaid  func(h *esb.ResponseHeaders, event *esb.EventChannelRaid)
 
 	HandleChannelBan             func(h *esb.ResponseHeaders, event *esb.EventChannelBan)
 	HandleChannelUnban           func(h *esb.ResponseHeaders, event *esb.EventChannelUnban)
 	HandleChannelModeratorAdd    func(h *esb.ResponseHeaders, event *esb.EventChannelModeratorAdd)
 	HandleChannelModeratorRemove func(h *esb.ResponseHeaders, event *esb.EventChannelModeratorRemove)
 
-	HandleChannelPointsRewardAdd              func(h *esb.ResponseHeaders, event *esb.EventChannelPointsRewardAdd)
-	HandleChannelPointsRewardUpdate           func(h *esb.ResponseHeaders, event *esb.EventChannelPointsRewardUpdate)
-	HandleChannelPointsRewardRemove           func(h *esb.ResponseHeaders, event *esb.EventChannelPointsRewardRemove)
-	HandleChannelPointsRewardRedemptionAdd    func(h *esb.ResponseHeaders, event *esb.EventChannelPointsRewardRedemptionAdd)
-	HandleChannelPointsRewardRedemptionUpdate func(h *esb.ResponseHeaders, event *esb.EventChannelPointsRewardRedemptionUpdate)
+	HandleChannelPointsRewardAdd func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelPointsRewardAdd,
+	)
+	HandleChannelPointsRewardUpdate func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelPointsRewardUpdate,
+	)
+	HandleChannelPointsRewardRemove func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelPointsRewardRemove,
+	)
+	HandleChannelPointsRewardRedemptionAdd func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelPointsRewardRedemptionAdd,
+	)
+	HandleChannelPointsRewardRedemptionUpdate func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelPointsRewardRedemptionUpdate,
+	)
 
 	HandleChannelPollBegin    func(h *esb.ResponseHeaders, event *esb.EventChannelPollBegin)
 	HandleChannelPollProgress func(h *esb.ResponseHeaders, event *esb.EventChannelPollProgress)
 	HandleChannelPollEnd      func(h *esb.ResponseHeaders, event *esb.EventChannelPollEnd)
 
-	HandleChannelPredictionBegin    func(h *esb.ResponseHeaders, event *esb.EventChannelPredictionBegin)
-	HandleChannelPredictionProgress func(h *esb.ResponseHeaders, event *esb.EventChannelPredictionProgress)
-	HandleChannelPredictionLock     func(h *esb.ResponseHeaders, event *esb.EventChannelPredictionLock)
-	HandleChannelPredictionEnd      func(h *esb.ResponseHeaders, event *esb.EventChannelPredictionEnd)
+	HandleChannelPredictionBegin func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelPredictionBegin,
+	)
+	HandleChannelPredictionProgress func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelPredictionProgress,
+	)
+	HandleChannelPredictionLock func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelPredictionLock,
+	)
+	HandleChannelPredictionEnd func(h *esb.ResponseHeaders, event *esb.EventChannelPredictionEnd)
 
-	HandleDropEntitlementGrant           func(h *esb.ResponseHeaders, event *esb.EventDropEntitlementGrant)
-	HandleExtensionBitsTransactionCreate func(h *esb.ResponseHeaders, event *esb.EventBitsTransactionCreate)
+	HandleDropEntitlementGrant func(
+		h *esb.ResponseHeaders,
+		event *esb.EventDropEntitlementGrant,
+	)
+	HandleExtensionBitsTransactionCreate func(
+		h *esb.ResponseHeaders,
+		event *esb.EventBitsTransactionCreate,
+	)
 
 	HandleGoalBegin    func(h *esb.ResponseHeaders, event *esb.EventGoals)
 	HandleGoalProgress func(h *esb.ResponseHeaders, event *esb.EventGoals)
@@ -77,7 +117,25 @@ type SubHandler struct {
 	HandleStreamOffline func(h *esb.ResponseHeaders, event *esb.EventStreamOffline)
 
 	HandleUserAuthorizationGrant  func(h *esb.ResponseHeaders, event *esb.EventUserAuthorizationGrant)
-	HandleUserAuthorizationRevoke func(h *esb.ResponseHeaders, event *esb.EventUserAuthorizationRevoke)
+	HandleUserAuthorizationRevoke func(
+		h *esb.ResponseHeaders,
+		event *esb.EventUserAuthorizationRevoke,
+	)
+
+	HandleChannelChatClear             func(h *esb.ResponseHeaders, event *esb.EventChannelChatClear)
+	HandleChannelChatClearUserMessages func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelChatClearUserMessages,
+	)
+	HandleChannelChatMessageDelete func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelChatMessageDelete,
+	)
+
+	HandleChannelChatNotification func(
+		h *esb.ResponseHeaders,
+		event *esb.EventChannelChatNotification,
+	)
 }
 
 func NewSubHandler(doSignatureVerification bool, secret []byte) *SubHandler {
@@ -147,7 +205,11 @@ func (s *SubHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 // checkIfDuplicate returns whether the IDTracker reports this notification is
 // a duplicate. If it is a duplicate, it writes a 2xx response and returns true.
 // Otherwise, it returns false.
-func (s *SubHandler) checkIfDuplicate(w http.ResponseWriter, r *http.Request, h *esb.ResponseHeaders) (bool, error) {
+func (s *SubHandler) checkIfDuplicate(
+	w http.ResponseWriter,
+	r *http.Request,
+	h *esb.ResponseHeaders,
+) (bool, error) {
 	if s.IDTracker != nil {
 		duplicate, err := s.IDTracker.AddAndCheckIfDuplicate(r.Context(), h.MessageID)
 		if err != nil {
@@ -166,7 +228,11 @@ func (s *SubHandler) checkIfDuplicate(w http.ResponseWriter, r *http.Request, h 
 	return false, nil
 }
 
-func (s *SubHandler) handleVerification(w http.ResponseWriter, bodyBytes []byte, headers *esb.ResponseHeaders) {
+func (s *SubHandler) handleVerification(
+	w http.ResponseWriter,
+	bodyBytes []byte,
+	headers *esb.ResponseHeaders,
+) {
 	var data esb.SubscriptionChallenge
 	if err := json.Unmarshal(bodyBytes, &data); err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
@@ -182,7 +248,11 @@ func (s *SubHandler) handleVerification(w http.ResponseWriter, bodyBytes []byte,
 	}
 }
 
-func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte, h *esb.ResponseHeaders) {
+func (s *SubHandler) handleNotification(
+	w http.ResponseWriter,
+	bodyBytes []byte,
+	h *esb.ResponseHeaders,
+) {
 	var notification esb.EventNotification
 	if err := json.Unmarshal(bodyBytes, &notification); err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
@@ -523,6 +593,42 @@ func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte,
 		}
 		if s.HandleUserUpdate != nil {
 			go s.HandleUserUpdate(h, &data)
+		}
+	case "channel.chat.clear":
+		var data esb.EventChannelChatClear
+		if err := json.Unmarshal(event, &data); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+		if s.HandleChannelChatClear != nil {
+			go s.HandleChannelChatClear(h, &data)
+		}
+	case "channel.chat.clear_user_messages":
+		var data esb.EventChannelChatClearUserMessages
+		if err := json.Unmarshal(event, &data); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+		if s.HandleChannelChatClearUserMessages != nil {
+			go s.HandleChannelChatClearUserMessages(h, &data)
+		}
+	case "channel.chat.message_delete":
+		var data esb.EventChannelChatMessageDelete
+		if err := json.Unmarshal(event, &data); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+		if s.HandleChannelChatMessageDelete != nil {
+			go s.HandleChannelChatMessageDelete(h, &data)
+		}
+	case "channel.chat.notification":
+		var data esb.EventChannelChatNotification
+		if err := json.Unmarshal(event, &data); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+		if s.HandleChannelChatNotification != nil {
+			go s.HandleChannelChatNotification(h, &data)
 		}
 	default:
 		http.Error(w, "Unknown notification type", http.StatusBadRequest)
