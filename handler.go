@@ -122,6 +122,7 @@ type SubHandler struct {
 		event *esb.EventUserAuthorizationRevoke,
 	)
 
+	HandleChannelChatMessage           func(h *esb.ResponseHeaders, event *esb.EventChannelChatMessage)
 	HandleChannelChatClear             func(h *esb.ResponseHeaders, event *esb.EventChannelChatClear)
 	HandleChannelChatClearUserMessages func(
 		h *esb.ResponseHeaders,
@@ -593,6 +594,15 @@ func (s *SubHandler) handleNotification(
 		}
 		if s.HandleUserUpdate != nil {
 			go s.HandleUserUpdate(h, &data)
+		}
+	case "channel.chat.message":
+		var data esb.EventChannelChatMessage
+		if err := json.Unmarshal(event, &data); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+		if s.HandleChannelChatMessage != nil {
+			go s.HandleChannelChatMessage(h, &data)
 		}
 	case "channel.chat.clear":
 		var data esb.EventChannelChatClear
