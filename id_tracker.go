@@ -1,4 +1,4 @@
-package eventsub_framework
+package eventsub
 
 import "context"
 

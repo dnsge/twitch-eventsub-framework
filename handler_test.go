@@ -1,15 +1,17 @@
-package eventsub_framework
+package eventsub
 
 import (
 	"bytes"
 	"context"
-	esb "github.com/dnsge/twitch-eventsub-bindings"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/dnsge/twitch-eventsub-framework/v2/bindings"
 )
 
 const secret = `hey this is really secret`
@@ -40,7 +42,7 @@ func TestSubHandler_ServeHTTP_VerificationInvalidSignature(t *testing.T) {
 
 func TestSubHandler_ServeHTTP_VerificationDynamic(t *testing.T) {
 	handler := NewSubHandler(false, nil)
-	handler.VerifyChallenge = func(h *esb.ResponseHeaders, chal *esb.SubscriptionChallenge) bool {
+	handler.VerifyChallenge = func(h *bindings.ResponseHeaders, chal *bindings.SubscriptionChallenge) bool {
 		return h.SubscriptionType == "channel.update"
 	}
 
@@ -81,7 +83,7 @@ func TestSubHandler_ServeHTTP_IDTracker(t *testing.T) {
 func TestSubHandler_ServeHTTP_Notification(t *testing.T) {
 	d := newDispatcher(1)
 	handler := NewSubHandler(false, nil)
-	handler.HandleChannelUpdate = func(h *esb.ResponseHeaders, event *esb.EventChannelUpdate) {
+	handler.HandleChannelUpdate = func(h *bindings.ResponseHeaders, event *bindings.EventChannelUpdate) {
 		d.Trigger()
 	}
 

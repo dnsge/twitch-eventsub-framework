@@ -1,9 +1,11 @@
-package eventsub_framework
+package eventsub
+
+import "context"
 
 // Credentials represents a method of obtaining Twitch API client credentials
 type Credentials interface {
-	ClientID() (string, error)
-	AppToken() (string, error)
+	ClientID(ctx context.Context) (string, error)
+	AppToken(ctx context.Context) (string, error)
 }
 
 type staticCredentials struct {
@@ -23,10 +25,10 @@ func NewStaticCredentials(clientID string, appToken string) Credentials {
 	}
 }
 
-func (s *staticCredentials) ClientID() (string, error) {
+func (s *staticCredentials) ClientID(context.Context) (string, error) {
 	return s.id, nil
 }
 
-func (s *staticCredentials) AppToken() (string, error) {
+func (s *staticCredentials) AppToken(context.Context) (string, error) {
 	return s.token, nil
 }

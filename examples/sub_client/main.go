@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	esb "github.com/dnsge/twitch-eventsub-bindings"
-	esf "github.com/dnsge/twitch-eventsub-framework"
+
+	"github.com/dnsge/twitch-eventsub-framework/v2"
+	"github.com/dnsge/twitch-eventsub-framework/v2/bindings"
 )
 
 const (
@@ -16,10 +17,10 @@ const (
 )
 
 func main() {
-	client := esf.NewSubClient(esf.NewStaticCredentials(clientID, appToken))
-	res, _ := client.Subscribe(context.Background(), &esf.SubRequest{
+	client := eventsub.NewSubClient(eventsub.NewStaticCredentials(clientID, appToken))
+	res, _ := client.Subscribe(context.Background(), &eventsub.SubRequest{
 		Type: "channel.update",
-		Condition: esb.ConditionChannelUpdate{
+		Condition: bindings.ConditionChannelUpdate{
 			BroadcasterUserID: "22484632",
 		},
 		Callback: "https://my.website/api/twitch/webhooks",

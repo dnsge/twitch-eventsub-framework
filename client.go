@@ -1,4 +1,4 @@
-package eventsub_framework
+package eventsub
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"time"
 
-	esb "github.com/dnsge/twitch-eventsub-bindings"
+	"github.com/dnsge/twitch-eventsub-framework/v2/bindings"
 )
 
 const (
@@ -98,12 +98,12 @@ func NewSubClientHTTP(credentials Credentials, client *http.Client) *SubClient {
 // If the returned error is non-nil, the caller must  close the returned
 // response body. The returned response is guaranteed to have a 2xx status code.
 func (s *SubClient) do(req *http.Request) (*http.Response, error) {
-	clientID, err := s.credentials.ClientID()
+	clientID, err := s.credentials.ClientID(req.Context())
 	if err != nil {
 		return nil, fmt.Errorf("get client id: %w", err)
 	}
 
-	appToken, err := s.credentials.AppToken()
+	appToken, err := s.credentials.AppToken(req.Context())
 	if err != nil {
 		return nil, fmt.Errorf("get app token: %w", err)
 	}
@@ -133,17 +133,17 @@ func (s *SubClient) do(req *http.Request) (*http.Response, error) {
 }
 
 // Subscribe creates a new Webhook subscription.
-func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*esb.RequestStatus, error) {
+func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*bindings.RequestStatus, error) {
 	// set default version to 1, so we can omit that parameter in request for backward compatibility
 	if srq.Version == "" {
 		srq.Version = "1"
 	}
 
-	reqJSON := esb.Request{
+	reqJSON := bindings.Request{
 		Type:      srq.Type,
 		Version:   srq.Version,
 		Condition: srq.Condition,
-		Transport: esb.Transport{
+		Transport: bindings.Transport{
 			Method:   "webhook",
 			Callback: srq.Callback,
 			Secret:   srq.Secret,
@@ -167,7 +167,7 @@ func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*esb.Reques
 
 	defer res.Body.Close()
 
-	var statusResponse esb.RequestStatus
+	var statusResponse bindings.RequestStatus
 	if err := json.NewDecoder(res.Body).Decode(&statusResponse); err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (s *SubClient) Unsubscribe(ctx context.Context, subscriptionID string) erro
 
 // GetSubscriptions returns all EventSub subscriptions.
 // If statusFilter != StatusAny, it will apply the filter to the query.
-func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (*esb.RequestStatus, error) {
+func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (*bindings.RequestStatus, error) {
 	firstRes, err := s.getSubscriptions(ctx, statusFilter, "")
 	if err != nil {
 		return nil, err
@@ -238,7 +238,7 @@ func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (
 }
 
 // Get the subscriptions with a specific pagination cursor
-func (s *SubClient) getSubscriptions(ctx context.Context, statusFilter Status, cursor string) (*esb.RequestStatus, error) {
+func (s *SubClient) getSubscriptions(ctx context.Context, statusFilter Status, cursor string) (*bindings.RequestStatus, error) {
 	// First, construct the request url with the proper query parameters.
 	u, err := url.Parse(EventSubSubscriptionsEndpoint)
 	if err != nil {
@@ -268,7 +268,7 @@ func (s *SubClient) getSubscriptions(ctx context.Context, statusFilter Status, c
 
 	defer res.Body.Close()
 
-	var subscriptionsResponse esb.RequestStatus
+	var subscriptionsResponse bindings.RequestStatus
 	if err := json.NewDecoder(res.Body).Decode(&subscriptionsResponse); err != nil {
 		return nil, err
 	}

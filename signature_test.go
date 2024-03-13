@@ -1,4 +1,4 @@
-package eventsub_framework
+package eventsub
 
 import (
 	"bytes"
@@ -29,21 +29,21 @@ func TestVerifyRequestSignature(t *testing.T) {
 	secret := []byte("fe16e98fe09b472086054e15d0f8ac02")
 	req1, body := makeValidRequest()
 
-	valid, err :=  VerifyRequestSignature(req1, body, secret)
+	valid, err := VerifyRequestSignature(req1, body, secret)
 	if !valid || err != nil {
 		t.Fatalf(`VerifyRequestSignature(req1, body, secret) = %t, %v, wanted true, nil`, valid, err)
 	}
 
 	req2, body := makeValidRequest()
 	req2.Header.Del("Twitch-Eventsub-Message-Signature")
-	valid, err =  VerifyRequestSignature(req2, body, secret)
+	valid, err = VerifyRequestSignature(req2, body, secret)
 	if valid || err == nil {
 		t.Fatalf(`VerifyRequestSignature(req2, body, secret) = %t, %v, wanted false, missing signature header`, valid, err)
 	}
 
 	req3, body := makeValidRequest()
 	req3.Header.Set("Twitch-Eventsub-Message-Signature", "abc123")
-	valid, err =  VerifyRequestSignature(req3, body, secret)
+	valid, err = VerifyRequestSignature(req3, body, secret)
 	if valid || err == nil {
 		t.Fatalf(`VerifyRequestSignature(req3, body, secret) = %t, %v, wanted false, invalid signature format`, valid, err)
 	}

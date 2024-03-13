@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	esb "github.com/dnsge/twitch-eventsub-bindings"
-	esf "github.com/dnsge/twitch-eventsub-framework"
 	"log"
 	"net/http"
+
+	eventsub "github.com/dnsge/twitch-eventsub-framework/v2"
+	"github.com/dnsge/twitch-eventsub-framework/v2/bindings"
 )
 
 const (
@@ -14,8 +15,8 @@ const (
 )
 
 func main() {
-	handler := esf.NewSubHandler(true, []byte(secretKey))
-	handler.HandleChannelUpdate = func(h *esb.ResponseHeaders, event *esb.EventChannelUpdate) {
+	handler := eventsub.NewSubHandler(true, []byte(secretKey))
+	handler.HandleChannelUpdate = func(h *bindings.ResponseHeaders, event *bindings.EventChannelUpdate) {
 		fmt.Println("Got a channel.update notification!")
 		fmt.Printf("Message id: %s\n", h.MessageID)
 		fmt.Printf("Channel: %s Title: %s\n", event.BroadcasterUserName, event.Title)

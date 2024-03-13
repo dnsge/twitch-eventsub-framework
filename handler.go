@@ -1,12 +1,13 @@
-package eventsub_framework
+package eventsub
 
 import (
 	"encoding/json"
 	"io"
 	"net/http"
 
-	esb "github.com/dnsge/twitch-eventsub-bindings"
 	"github.com/mozillazg/go-httpheader"
+
+	"github.com/dnsge/twitch-eventsub-framework/v2/bindings"
 )
 
 const (
@@ -26,116 +27,116 @@ type SubHandler struct {
 
 	// Challenge handler function.
 	// Returns whether the subscription should be accepted.
-	VerifyChallenge func(h *esb.ResponseHeaders, chal *esb.SubscriptionChallenge) bool
+	VerifyChallenge func(h *bindings.ResponseHeaders, chal *bindings.SubscriptionChallenge) bool
 
 	// IDTracker used to deduplicate notifications
 	IDTracker               IDTracker
-	OnDuplicateNotification func(h *esb.ResponseHeaders)
+	OnDuplicateNotification func(h *bindings.ResponseHeaders)
 
-	HandleChannelUpdate func(h *esb.ResponseHeaders, event *esb.EventChannelUpdate)
-	HandleChannelFollow func(h *esb.ResponseHeaders, event *esb.EventChannelFollow)
-	HandleUserUpdate    func(h *esb.ResponseHeaders, event *esb.EventUserUpdate)
+	HandleChannelUpdate func(h *bindings.ResponseHeaders, event *bindings.EventChannelUpdate)
+	HandleChannelFollow func(h *bindings.ResponseHeaders, event *bindings.EventChannelFollow)
+	HandleUserUpdate    func(h *bindings.ResponseHeaders, event *bindings.EventUserUpdate)
 
-	HandleChannelSubscribe       func(h *esb.ResponseHeaders, event *esb.EventChannelSubscribe)
+	HandleChannelSubscribe       func(h *bindings.ResponseHeaders, event *bindings.EventChannelSubscribe)
 	HandleChannelSubscriptionEnd func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelSubscriptionEnd,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelSubscriptionEnd,
 	)
 	HandleChannelSubscriptionGift func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelSubscriptionGift,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelSubscriptionGift,
 	)
 	HandleChannelSubscriptionMessage func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelSubscriptionMessage,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelSubscriptionMessage,
 	)
-	HandleChannelCheer func(h *esb.ResponseHeaders, event *esb.EventChannelCheer)
-	HandleChannelRaid  func(h *esb.ResponseHeaders, event *esb.EventChannelRaid)
+	HandleChannelCheer func(h *bindings.ResponseHeaders, event *bindings.EventChannelCheer)
+	HandleChannelRaid  func(h *bindings.ResponseHeaders, event *bindings.EventChannelRaid)
 
-	HandleChannelBan             func(h *esb.ResponseHeaders, event *esb.EventChannelBan)
-	HandleChannelUnban           func(h *esb.ResponseHeaders, event *esb.EventChannelUnban)
-	HandleChannelModeratorAdd    func(h *esb.ResponseHeaders, event *esb.EventChannelModeratorAdd)
-	HandleChannelModeratorRemove func(h *esb.ResponseHeaders, event *esb.EventChannelModeratorRemove)
+	HandleChannelBan             func(h *bindings.ResponseHeaders, event *bindings.EventChannelBan)
+	HandleChannelUnban           func(h *bindings.ResponseHeaders, event *bindings.EventChannelUnban)
+	HandleChannelModeratorAdd    func(h *bindings.ResponseHeaders, event *bindings.EventChannelModeratorAdd)
+	HandleChannelModeratorRemove func(h *bindings.ResponseHeaders, event *bindings.EventChannelModeratorRemove)
 
 	HandleChannelPointsRewardAdd func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelPointsRewardAdd,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelPointsRewardAdd,
 	)
 	HandleChannelPointsRewardUpdate func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelPointsRewardUpdate,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelPointsRewardUpdate,
 	)
 	HandleChannelPointsRewardRemove func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelPointsRewardRemove,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelPointsRewardRemove,
 	)
 	HandleChannelPointsRewardRedemptionAdd func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelPointsRewardRedemptionAdd,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelPointsRewardRedemptionAdd,
 	)
 	HandleChannelPointsRewardRedemptionUpdate func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelPointsRewardRedemptionUpdate,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelPointsRewardRedemptionUpdate,
 	)
 
-	HandleChannelPollBegin    func(h *esb.ResponseHeaders, event *esb.EventChannelPollBegin)
-	HandleChannelPollProgress func(h *esb.ResponseHeaders, event *esb.EventChannelPollProgress)
-	HandleChannelPollEnd      func(h *esb.ResponseHeaders, event *esb.EventChannelPollEnd)
+	HandleChannelPollBegin    func(h *bindings.ResponseHeaders, event *bindings.EventChannelPollBegin)
+	HandleChannelPollProgress func(h *bindings.ResponseHeaders, event *bindings.EventChannelPollProgress)
+	HandleChannelPollEnd      func(h *bindings.ResponseHeaders, event *bindings.EventChannelPollEnd)
 
 	HandleChannelPredictionBegin func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelPredictionBegin,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelPredictionBegin,
 	)
 	HandleChannelPredictionProgress func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelPredictionProgress,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelPredictionProgress,
 	)
 	HandleChannelPredictionLock func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelPredictionLock,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelPredictionLock,
 	)
-	HandleChannelPredictionEnd func(h *esb.ResponseHeaders, event *esb.EventChannelPredictionEnd)
+	HandleChannelPredictionEnd func(h *bindings.ResponseHeaders, event *bindings.EventChannelPredictionEnd)
 
 	HandleDropEntitlementGrant func(
-		h *esb.ResponseHeaders,
-		event *esb.EventDropEntitlementGrant,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventDropEntitlementGrant,
 	)
 	HandleExtensionBitsTransactionCreate func(
-		h *esb.ResponseHeaders,
-		event *esb.EventBitsTransactionCreate,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventBitsTransactionCreate,
 	)
 
-	HandleGoalBegin    func(h *esb.ResponseHeaders, event *esb.EventGoals)
-	HandleGoalProgress func(h *esb.ResponseHeaders, event *esb.EventGoals)
-	HandleGoalEnd      func(h *esb.ResponseHeaders, event *esb.EventGoals)
+	HandleGoalBegin    func(h *bindings.ResponseHeaders, event *bindings.EventGoals)
+	HandleGoalProgress func(h *bindings.ResponseHeaders, event *bindings.EventGoals)
+	HandleGoalEnd      func(h *bindings.ResponseHeaders, event *bindings.EventGoals)
 
-	HandleHypeTrainBegin    func(h *esb.ResponseHeaders, event *esb.EventHypeTrainBegin)
-	HandleHypeTrainProgress func(h *esb.ResponseHeaders, event *esb.EventHypeTrainProgress)
-	HandleHypeTrainEnd      func(h *esb.ResponseHeaders, event *esb.EventHypeTrainEnd)
+	HandleHypeTrainBegin    func(h *bindings.ResponseHeaders, event *bindings.EventHypeTrainBegin)
+	HandleHypeTrainProgress func(h *bindings.ResponseHeaders, event *bindings.EventHypeTrainProgress)
+	HandleHypeTrainEnd      func(h *bindings.ResponseHeaders, event *bindings.EventHypeTrainEnd)
 
-	HandleStreamOnline  func(h *esb.ResponseHeaders, event *esb.EventStreamOnline)
-	HandleStreamOffline func(h *esb.ResponseHeaders, event *esb.EventStreamOffline)
+	HandleStreamOnline  func(h *bindings.ResponseHeaders, event *bindings.EventStreamOnline)
+	HandleStreamOffline func(h *bindings.ResponseHeaders, event *bindings.EventStreamOffline)
 
-	HandleUserAuthorizationGrant  func(h *esb.ResponseHeaders, event *esb.EventUserAuthorizationGrant)
+	HandleUserAuthorizationGrant  func(h *bindings.ResponseHeaders, event *bindings.EventUserAuthorizationGrant)
 	HandleUserAuthorizationRevoke func(
-		h *esb.ResponseHeaders,
-		event *esb.EventUserAuthorizationRevoke,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventUserAuthorizationRevoke,
 	)
 
-	HandleChannelChatMessage           func(h *esb.ResponseHeaders, event *esb.EventChannelChatMessage)
-	HandleChannelChatClear             func(h *esb.ResponseHeaders, event *esb.EventChannelChatClear)
+	HandleChannelChatMessage           func(h *bindings.ResponseHeaders, event *bindings.EventChannelChatMessage)
+	HandleChannelChatClear             func(h *bindings.ResponseHeaders, event *bindings.EventChannelChatClear)
 	HandleChannelChatClearUserMessages func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelChatClearUserMessages,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelChatClearUserMessages,
 	)
 	HandleChannelChatMessageDelete func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelChatMessageDelete,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelChatMessageDelete,
 	)
 
 	HandleChannelChatNotification func(
-		h *esb.ResponseHeaders,
-		event *esb.EventChannelChatNotification,
+		h *bindings.ResponseHeaders,
+		event *bindings.EventChannelChatNotification,
 	)
 }
 
@@ -175,7 +176,7 @@ func (s *SubHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Decode request headers to verify and dispatch payload
-	var h esb.ResponseHeaders
+	var h bindings.ResponseHeaders
 	if err := httpheader.Decode(r.Header, &h); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -209,7 +210,7 @@ func (s *SubHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 func (s *SubHandler) checkIfDuplicate(
 	w http.ResponseWriter,
 	r *http.Request,
-	h *esb.ResponseHeaders,
+	h *bindings.ResponseHeaders,
 ) (bool, error) {
 	if s.IDTracker != nil {
 		duplicate, err := s.IDTracker.AddAndCheckIfDuplicate(r.Context(), h.MessageID)
@@ -232,9 +233,9 @@ func (s *SubHandler) checkIfDuplicate(
 func (s *SubHandler) handleVerification(
 	w http.ResponseWriter,
 	bodyBytes []byte,
-	headers *esb.ResponseHeaders,
+	headers *bindings.ResponseHeaders,
 ) {
-	var data esb.SubscriptionChallenge
+	var data bindings.SubscriptionChallenge
 	if err := json.Unmarshal(bodyBytes, &data); err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
@@ -252,9 +253,9 @@ func (s *SubHandler) handleVerification(
 func (s *SubHandler) handleNotification(
 	w http.ResponseWriter,
 	bodyBytes []byte,
-	h *esb.ResponseHeaders,
+	h *bindings.ResponseHeaders,
 ) {
-	var notification esb.EventNotification
+	var notification bindings.EventNotification
 	if err := json.Unmarshal(bodyBytes, &notification); err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
@@ -263,7 +264,7 @@ func (s *SubHandler) handleNotification(
 
 	switch h.SubscriptionType {
 	case "channel.update":
-		var data esb.EventChannelUpdate
+		var data bindings.EventChannelUpdate
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -272,7 +273,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelUpdate(h, &data)
 		}
 	case "channel.follow":
-		var data esb.EventChannelFollow
+		var data bindings.EventChannelFollow
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -281,7 +282,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelFollow(h, &data)
 		}
 	case "channel.subscribe":
-		var data esb.EventChannelSubscribe
+		var data bindings.EventChannelSubscribe
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -290,7 +291,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelSubscribe(h, &data)
 		}
 	case "channel.subscription.end":
-		var data esb.EventChannelSubscriptionEnd
+		var data bindings.EventChannelSubscriptionEnd
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -299,7 +300,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelSubscriptionEnd(h, &data)
 		}
 	case "channel.subscription.gift":
-		var data esb.EventChannelSubscriptionGift
+		var data bindings.EventChannelSubscriptionGift
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -308,7 +309,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelSubscriptionGift(h, &data)
 		}
 	case "channel.subscription.message":
-		var data esb.EventChannelSubscriptionMessage
+		var data bindings.EventChannelSubscriptionMessage
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -317,7 +318,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelSubscriptionMessage(h, &data)
 		}
 	case "channel.cheer":
-		var data esb.EventChannelCheer
+		var data bindings.EventChannelCheer
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -326,7 +327,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelCheer(h, &data)
 		}
 	case "channel.raid":
-		var data esb.EventChannelRaid
+		var data bindings.EventChannelRaid
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -335,7 +336,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelRaid(h, &data)
 		}
 	case "channel.ban":
-		var data esb.EventChannelBan
+		var data bindings.EventChannelBan
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -344,7 +345,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelBan(h, &data)
 		}
 	case "channel.unban":
-		var data esb.EventChannelUnban
+		var data bindings.EventChannelUnban
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -353,7 +354,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelUnban(h, &data)
 		}
 	case "channel.moderator.add":
-		var data esb.EventChannelModeratorAdd
+		var data bindings.EventChannelModeratorAdd
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -362,7 +363,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelModeratorAdd(h, &data)
 		}
 	case "channel.moderator.remove":
-		var data esb.EventChannelModeratorRemove
+		var data bindings.EventChannelModeratorRemove
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -371,7 +372,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelModeratorRemove(h, &data)
 		}
 	case "channel.channel_points_custom_reward.add":
-		var data esb.EventChannelPointsRewardAdd
+		var data bindings.EventChannelPointsRewardAdd
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -380,7 +381,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPointsRewardAdd(h, &data)
 		}
 	case "channel.channel_points_custom_reward.update":
-		var data esb.EventChannelPointsRewardUpdate
+		var data bindings.EventChannelPointsRewardUpdate
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -389,7 +390,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPointsRewardUpdate(h, &data)
 		}
 	case "channel.channel_points_custom_reward.remove":
-		var data esb.EventChannelPointsRewardRemove
+		var data bindings.EventChannelPointsRewardRemove
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -398,7 +399,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPointsRewardRemove(h, &data)
 		}
 	case "channel.channel_points_custom_reward_redemption.add":
-		var data esb.EventChannelPointsRewardRedemptionAdd
+		var data bindings.EventChannelPointsRewardRedemptionAdd
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -407,7 +408,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPointsRewardRedemptionAdd(h, &data)
 		}
 	case "channel.channel_points_custom_reward_redemption.update":
-		var data esb.EventChannelPointsRewardRedemptionUpdate
+		var data bindings.EventChannelPointsRewardRedemptionUpdate
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -416,7 +417,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPointsRewardRedemptionUpdate(h, &data)
 		}
 	case "channel.poll.begin":
-		var data esb.EventChannelPollBegin
+		var data bindings.EventChannelPollBegin
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -425,7 +426,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPollBegin(h, &data)
 		}
 	case "channel.poll.progress":
-		var data esb.EventChannelPollProgress
+		var data bindings.EventChannelPollProgress
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -434,7 +435,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPollProgress(h, &data)
 		}
 	case "channel.poll.end":
-		var data esb.EventChannelPollEnd
+		var data bindings.EventChannelPollEnd
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -443,7 +444,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPollEnd(h, &data)
 		}
 	case "channel.prediction.begin":
-		var data esb.EventChannelPredictionBegin
+		var data bindings.EventChannelPredictionBegin
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -452,7 +453,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPredictionBegin(h, &data)
 		}
 	case "channel.prediction.progress":
-		var data esb.EventChannelPredictionProgress
+		var data bindings.EventChannelPredictionProgress
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -461,7 +462,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPredictionProgress(h, &data)
 		}
 	case "channel.prediction.lock":
-		var data esb.EventChannelPredictionLock
+		var data bindings.EventChannelPredictionLock
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -470,7 +471,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPredictionLock(h, &data)
 		}
 	case "channel.prediction.end":
-		var data esb.EventChannelPredictionEnd
+		var data bindings.EventChannelPredictionEnd
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -479,7 +480,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelPredictionEnd(h, &data)
 		}
 	case "drop.entitlement.grant":
-		var data esb.EventDropEntitlementGrant
+		var data bindings.EventDropEntitlementGrant
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -488,7 +489,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleDropEntitlementGrant(h, &data)
 		}
 	case "extension.bits_transaction.create":
-		var data esb.EventBitsTransactionCreate
+		var data bindings.EventBitsTransactionCreate
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -497,7 +498,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleExtensionBitsTransactionCreate(h, &data)
 		}
 	case "channel.goal.begin":
-		var data esb.EventGoals
+		var data bindings.EventGoals
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -506,7 +507,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleGoalBegin(h, &data)
 		}
 	case "channel.goal.progress":
-		var data esb.EventGoals
+		var data bindings.EventGoals
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -515,7 +516,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleGoalProgress(h, &data)
 		}
 	case "channel.goal.end":
-		var data esb.EventGoals
+		var data bindings.EventGoals
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -524,7 +525,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleGoalEnd(h, &data)
 		}
 	case "channel.hype_train.begin":
-		var data esb.EventHypeTrainBegin
+		var data bindings.EventHypeTrainBegin
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -533,7 +534,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleHypeTrainBegin(h, &data)
 		}
 	case "channel.hype_train.progress":
-		var data esb.EventHypeTrainProgress
+		var data bindings.EventHypeTrainProgress
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -542,7 +543,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleHypeTrainProgress(h, &data)
 		}
 	case "channel.hype_train.end":
-		var data esb.EventHypeTrainEnd
+		var data bindings.EventHypeTrainEnd
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -551,7 +552,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleHypeTrainEnd(h, &data)
 		}
 	case "stream.online":
-		var data esb.EventStreamOnline
+		var data bindings.EventStreamOnline
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -560,7 +561,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleStreamOnline(h, &data)
 		}
 	case "stream.offline":
-		var data esb.EventStreamOffline
+		var data bindings.EventStreamOffline
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -569,7 +570,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleStreamOffline(h, &data)
 		}
 	case "user.authorization.grant":
-		var data esb.EventUserAuthorizationGrant
+		var data bindings.EventUserAuthorizationGrant
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -578,7 +579,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleUserAuthorizationGrant(h, &data)
 		}
 	case "user.authorization.revoke":
-		var data esb.EventUserAuthorizationRevoke
+		var data bindings.EventUserAuthorizationRevoke
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -587,7 +588,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleUserAuthorizationRevoke(h, &data)
 		}
 	case "user.update":
-		var data esb.EventUserUpdate
+		var data bindings.EventUserUpdate
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -596,7 +597,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleUserUpdate(h, &data)
 		}
 	case "channel.chat.message":
-		var data esb.EventChannelChatMessage
+		var data bindings.EventChannelChatMessage
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -605,7 +606,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelChatMessage(h, &data)
 		}
 	case "channel.chat.clear":
-		var data esb.EventChannelChatClear
+		var data bindings.EventChannelChatClear
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -614,7 +615,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelChatClear(h, &data)
 		}
 	case "channel.chat.clear_user_messages":
-		var data esb.EventChannelChatClearUserMessages
+		var data bindings.EventChannelChatClearUserMessages
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -623,7 +624,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelChatClearUserMessages(h, &data)
 		}
 	case "channel.chat.message_delete":
-		var data esb.EventChannelChatMessageDelete
+		var data bindings.EventChannelChatMessageDelete
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
@@ -632,7 +633,7 @@ func (s *SubHandler) handleNotification(
 			go s.HandleChannelChatMessageDelete(h, &data)
 		}
 	case "channel.chat.notification":
-		var data esb.EventChannelChatNotification
+		var data bindings.EventChannelChatNotification
 		if err := json.Unmarshal(event, &data); err != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
