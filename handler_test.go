@@ -93,6 +93,17 @@ func TestSubHandler_ServeHTTP_Notification(t *testing.T) {
 	assert.True(t, d.WaitForTrigger(100*time.Millisecond), "HandleChannelUpdate failed to trigger")
 }
 
+func TestSubHandler_ServeHTTP_NotificationBadVersion(t *testing.T) {
+	handler := NewSubHandler(false, nil)
+	handler.HandleChannelUpdate = func(h *bindings.NotificationHeaders, event *bindings.EventChannelUpdate) {
+		panic("should not be called")
+	}
+
+	res := handleRequest(handler, newNotificationRequestBadVersion)
+
+	assert.True(t, !isOK(res.StatusCode))
+}
+
 func handleRequest(handler *SubHandler, reqFactory func() *http.Request) *http.Response {
 	verificationReq := reqFactory()
 	w := httptest.NewRecorder()
@@ -155,6 +166,24 @@ func newNotificationRequest() *http.Request {
 		"Twitch-Eventsub-Subscription-Is-Batching-Enabled": {"false"},
 		"Twitch-Eventsub-Subscription-Type":                {"channel.update"},
 		"Twitch-Eventsub-Subscription-Version":             {"1"},
+	}
+
+	return req
+}
+
+func newNotificationRequestBadVersion() *http.Request {
+	bodyData := []byte(`{"subscription":{"id":"ef7e8fba-6c32-4ead-965d-61f21660d095","status":"enabled","type":"channel.update","version":"unknown","condition":{"broadcaster_user_id":"132532813"},"transport":{"method":"webhook","callback":"https://testing.proxy.b.dnsge.org/webhooks"},"created_at":"2023-03-09T04:44:48.057734342Z","cost":0},"event":{"broadcaster_user_id":"132532813","broadcaster_user_login":"icelys","broadcaster_user_name":"icelys","title":"hello there!","language":"en","category_id":"509658","category_name":"Just Chatting","is_mature":false}}`)
+
+	req := httptest.NewRequest("POST", "/", bytes.NewReader(bodyData))
+	req.Header = http.Header{
+		"Content-Type":                                     {"application/json"},
+		"Twitch-Eventsub-Message-Id":                       {"eTOJ71BBQNXGNW8qPUNMRGIHH5yv4bBrvwl02DWgF0o="},
+		"Twitch-Eventsub-Message-Retry":                    {"0"},
+		"Twitch-Eventsub-Message-Timestamp":                {"2023-03-09T04:45:36.836089549Z"},
+		"Twitch-Eventsub-Message-Type":                     {"notification"},
+		"Twitch-Eventsub-Subscription-Is-Batching-Enabled": {"false"},
+		"Twitch-Eventsub-Subscription-Type":                {"channel.update"},
+		"Twitch-Eventsub-Subscription-Version":             {"unknown"},
 	}
 
 	return req

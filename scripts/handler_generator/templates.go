@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"go/format"
 	"io"
 	"strings"
@@ -21,6 +22,24 @@ import (
 	"github.com/dnsge/twitch-eventsub-framework/v2/bindings"
 )
 
+func deserializeAndCallHandler[EventType any](
+	h *bindings.NotificationHeaders, 
+	event json.RawMessage, 
+	handler EventHandler[EventType],
+) error {
+	if handler == nil {
+		return nil
+	}
+
+	var data EventType
+	if err := json.Unmarshal(event, &data); err != nil {
+		return err
+	}
+
+	go handler(h, &data)
+	return nil
+}
+
 func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte, h *bindings.NotificationHeaders) {
 	var notification bindings.EventNotification
 	if err := json.Unmarshal(bodyBytes, &notification); err != nil {
@@ -28,9 +47,16 @@ func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte,
 		return
 	}
 
-	switch h.SubscriptionType { {{ .SwitchCases }}
+	var err error
+	selector := h.SubscriptionType + "_" + h.SubscriptionVersion
+	switch selector { {{ .SwitchCases }}
 	default:
-		http.Error(w, "Unknown notification type", http.StatusBadRequest)
+		http.Error(w, "Unsupported notification type and version", http.StatusBadRequest)
+		return
+	}
+
+	if err != nil {
+		http.Error(w, "Invalid notification", http.StatusBadRequest)
 		return
 	}
 
@@ -39,23 +65,10 @@ func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte,
 `))
 
 	switchCaseTemplate = template.Must(template.New("switch").Parse(`
-case "{{ .EventsubMessageType }}":
-	var data {{ .EventType }}
-	if err := json.Unmarshal(notification.Event, &data); err != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-		return
-	}
-	if s.{{ .HandlerFieldName }} != nil {
-		go s.{{ .HandlerFieldName }}(h, &data)
-	}
+case "{{ .EventsubMessageType }}_{{ .EventsubMessageVersion }}":
+	err = deserializeAndCallHandler(h, notification.Event, s.{{ .HandlerFieldName }});
 `))
 )
-
-type switchCase struct {
-	EventsubMessageType string
-	EventType           string
-	HandlerFieldName    string
-}
 
 func renderOutputFile(cases []switchCase, writer io.Writer) error {
 	var buf bytes.Buffer
@@ -65,7 +78,7 @@ func renderOutputFile(cases []switchCase, writer io.Writer) error {
 		var caseBuf bytes.Buffer
 		err := switchCaseTemplate.Execute(&caseBuf, handlerCase)
 		if err != nil {
-			return err
+			return fmt.Errorf("execute switch: %w", err)
 		}
 		caseStrings = append(caseStrings, caseBuf.String())
 	}
@@ -76,12 +89,12 @@ func renderOutputFile(cases []switchCase, writer io.Writer) error {
 		SwitchCases: strings.Join(caseStrings, ""),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("execute output: %w", err)
 	}
 
 	formatted, err := format.Source(buf.Bytes())
 	if err != nil {
-		return err
+		return fmt.Errorf("format: %w", err)
 	}
 
 	_, err = writer.Write(formatted)

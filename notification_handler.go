@@ -9,6 +9,24 @@ import (
 	"github.com/dnsge/twitch-eventsub-framework/v2/bindings"
 )
 
+func deserializeAndCallHandler[EventType any](
+	h *bindings.NotificationHeaders,
+	event json.RawMessage,
+	handler EventHandler[EventType],
+) error {
+	if handler == nil {
+		return nil
+	}
+
+	var data EventType
+	if err := json.Unmarshal(event, &data); err != nil {
+		return err
+	}
+
+	go handler(h, &data)
+	return nil
+}
+
 func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte, h *bindings.NotificationHeaders) {
 	var notification bindings.EventNotification
 	if err := json.Unmarshal(bodyBytes, &notification); err != nil {
@@ -16,449 +34,148 @@ func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte,
 		return
 	}
 
-	switch h.SubscriptionType {
-	case "channel.ban":
-		var data bindings.EventChannelBan
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelBan != nil {
-			go s.HandleChannelBan(h, &data)
-		}
+	var err error
+	selector := h.SubscriptionType + "_" + h.SubscriptionVersion
+	switch selector {
+	case "channel.ban_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelBan)
 
-	case "channel.channel_points_custom_reward.add":
-		var data bindings.EventChannelPointsRewardAdd
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPointsRewardAdd != nil {
-			go s.HandleChannelPointsRewardAdd(h, &data)
-		}
+	case "channel.channel_points_custom_reward.add_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPointsRewardAdd)
 
-	case "channel.channel_points_custom_reward.remove":
-		var data bindings.EventChannelPointsRewardRemove
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPointsRewardRemove != nil {
-			go s.HandleChannelPointsRewardRemove(h, &data)
-		}
+	case "channel.channel_points_custom_reward.remove_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPointsRewardRemove)
 
-	case "channel.channel_points_custom_reward.update":
-		var data bindings.EventChannelPointsRewardUpdate
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPointsRewardUpdate != nil {
-			go s.HandleChannelPointsRewardUpdate(h, &data)
-		}
+	case "channel.channel_points_custom_reward.update_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPointsRewardUpdate)
 
-	case "channel.channel_points_custom_reward_redemption.add":
-		var data bindings.EventChannelPointsRewardRedemptionAdd
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPointsRewardRedemptionAdd != nil {
-			go s.HandleChannelPointsRewardRedemptionAdd(h, &data)
-		}
+	case "channel.channel_points_custom_reward_redemption.add_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPointsRewardRedemptionAdd)
 
-	case "channel.channel_points_custom_reward_redemption.update":
-		var data bindings.EventChannelPointsRewardRedemptionUpdate
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPointsRewardRedemptionUpdate != nil {
-			go s.HandleChannelPointsRewardRedemptionUpdate(h, &data)
-		}
+	case "channel.channel_points_custom_reward_redemption.update_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPointsRewardRedemptionUpdate)
 
-	case "channel.chat.clear":
-		var data bindings.EventChannelChatClear
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelChatClear != nil {
-			go s.HandleChannelChatClear(h, &data)
-		}
+	case "channel.chat.clear_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelChatClear)
 
-	case "channel.chat.clear_user_messages":
-		var data bindings.EventChannelChatClearUserMessages
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelChatClearUserMessages != nil {
-			go s.HandleChannelChatClearUserMessages(h, &data)
-		}
+	case "channel.chat.clear_user_messages_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelChatClearUserMessages)
 
-	case "channel.chat.message":
-		var data bindings.EventChannelChatMessage
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelChatMessage != nil {
-			go s.HandleChannelChatMessage(h, &data)
-		}
+	case "channel.chat.message_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelChatMessage)
 
-	case "channel.chat.message_delete":
-		var data bindings.EventChannelChatMessageDelete
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelChatMessageDelete != nil {
-			go s.HandleChannelChatMessageDelete(h, &data)
-		}
+	case "channel.chat.message_delete_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelChatMessageDelete)
 
-	case "channel.chat.notification":
-		var data bindings.EventChannelChatNotification
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelChatNotification != nil {
-			go s.HandleChannelChatNotification(h, &data)
-		}
+	case "channel.chat.notification_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelChatNotification)
 
-	case "channel.cheer":
-		var data bindings.EventChannelCheer
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelCheer != nil {
-			go s.HandleChannelCheer(h, &data)
-		}
+	case "channel.cheer_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelCheer)
 
-	case "channel.follow":
-		var data bindings.EventChannelFollow
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelFollow != nil {
-			go s.HandleChannelFollow(h, &data)
-		}
+	case "channel.follow_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelFollow)
 
-	case "channel.goal.begin":
-		var data bindings.EventGoals
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleGoalBegin != nil {
-			go s.HandleGoalBegin(h, &data)
-		}
+	case "channel.goal.begin_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleGoalBegin)
 
-	case "channel.goal.end":
-		var data bindings.EventGoals
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleGoalEnd != nil {
-			go s.HandleGoalEnd(h, &data)
-		}
+	case "channel.goal.end_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleGoalEnd)
 
-	case "channel.goal.progress":
-		var data bindings.EventGoals
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleGoalProgress != nil {
-			go s.HandleGoalProgress(h, &data)
-		}
+	case "channel.goal.progress_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleGoalProgress)
 
-	case "channel.hype_train.begin":
-		var data bindings.EventHypeTrainBegin
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleHypeTrainBegin != nil {
-			go s.HandleHypeTrainBegin(h, &data)
-		}
+	case "channel.hype_train.begin_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleHypeTrainBegin)
 
-	case "channel.hype_train.end":
-		var data bindings.EventHypeTrainEnd
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleHypeTrainEnd != nil {
-			go s.HandleHypeTrainEnd(h, &data)
-		}
+	case "channel.hype_train.end_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleHypeTrainEnd)
 
-	case "channel.hype_train.progress":
-		var data bindings.EventHypeTrainProgress
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleHypeTrainProgress != nil {
-			go s.HandleHypeTrainProgress(h, &data)
-		}
+	case "channel.hype_train.progress_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleHypeTrainProgress)
 
-	case "channel.moderator.add":
-		var data bindings.EventChannelModeratorAdd
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelModeratorAdd != nil {
-			go s.HandleChannelModeratorAdd(h, &data)
-		}
+	case "channel.moderator.add_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelModeratorAdd)
 
-	case "channel.moderator.remove":
-		var data bindings.EventChannelModeratorRemove
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelModeratorRemove != nil {
-			go s.HandleChannelModeratorRemove(h, &data)
-		}
+	case "channel.moderator.remove_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelModeratorRemove)
 
-	case "channel.poll.begin":
-		var data bindings.EventChannelPollBegin
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPollBegin != nil {
-			go s.HandleChannelPollBegin(h, &data)
-		}
+	case "channel.poll.begin_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPollBegin)
 
-	case "channel.poll.end":
-		var data bindings.EventChannelPollEnd
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPollEnd != nil {
-			go s.HandleChannelPollEnd(h, &data)
-		}
+	case "channel.poll.end_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPollEnd)
 
-	case "channel.poll.progress":
-		var data bindings.EventChannelPollProgress
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPollProgress != nil {
-			go s.HandleChannelPollProgress(h, &data)
-		}
+	case "channel.poll.progress_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPollProgress)
 
-	case "channel.prediction.begin":
-		var data bindings.EventChannelPredictionBegin
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPredictionBegin != nil {
-			go s.HandleChannelPredictionBegin(h, &data)
-		}
+	case "channel.prediction.begin_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPredictionBegin)
 
-	case "channel.prediction.end":
-		var data bindings.EventChannelPredictionEnd
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPredictionEnd != nil {
-			go s.HandleChannelPredictionEnd(h, &data)
-		}
+	case "channel.prediction.end_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPredictionEnd)
 
-	case "channel.prediction.lock":
-		var data bindings.EventChannelPredictionLock
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPredictionLock != nil {
-			go s.HandleChannelPredictionLock(h, &data)
-		}
+	case "channel.prediction.lock_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPredictionLock)
 
-	case "channel.prediction.progress":
-		var data bindings.EventChannelPredictionProgress
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelPredictionProgress != nil {
-			go s.HandleChannelPredictionProgress(h, &data)
-		}
+	case "channel.prediction.progress_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPredictionProgress)
 
-	case "channel.raid":
-		var data bindings.EventChannelRaid
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelRaid != nil {
-			go s.HandleChannelRaid(h, &data)
-		}
+	case "channel.raid_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelRaid)
 
-	case "channel.subscribe":
-		var data bindings.EventChannelSubscribe
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelSubscribe != nil {
-			go s.HandleChannelSubscribe(h, &data)
-		}
+	case "channel.subscribe_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelSubscribe)
 
-	case "channel.subscription.end":
-		var data bindings.EventChannelSubscriptionEnd
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelSubscriptionEnd != nil {
-			go s.HandleChannelSubscriptionEnd(h, &data)
-		}
+	case "channel.subscription.end_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelSubscriptionEnd)
 
-	case "channel.subscription.gift":
-		var data bindings.EventChannelSubscriptionGift
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelSubscriptionGift != nil {
-			go s.HandleChannelSubscriptionGift(h, &data)
-		}
+	case "channel.subscription.gift_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelSubscriptionGift)
 
-	case "channel.subscription.message":
-		var data bindings.EventChannelSubscriptionMessage
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelSubscriptionMessage != nil {
-			go s.HandleChannelSubscriptionMessage(h, &data)
-		}
+	case "channel.subscription.message_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelSubscriptionMessage)
 
-	case "channel.unban":
-		var data bindings.EventChannelUnban
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelUnban != nil {
-			go s.HandleChannelUnban(h, &data)
-		}
+	case "channel.unban_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUnban)
 
-	case "channel.unban_request.create":
-		var data bindings.EventChannelUnbanRequestCreate
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelUnbanRequestCreate != nil {
-			go s.HandleChannelUnbanRequestCreate(h, &data)
-		}
+	case "channel.unban_request.create_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUnbanRequestCreate)
 
-	case "channel.unban_request.resolve":
-		var data bindings.EventChannelUnbanRequestResolve
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelUnbanRequestResolve != nil {
-			go s.HandleChannelUnbanRequestResolve(h, &data)
-		}
+	case "channel.unban_request.resolve_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUnbanRequestResolve)
 
-	case "channel.update":
-		var data bindings.EventChannelUpdate
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleChannelUpdate != nil {
-			go s.HandleChannelUpdate(h, &data)
-		}
+	case "channel.update_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUpdate)
 
-	case "drop.entitlement.grant":
-		var data bindings.EventDropEntitlementGrant
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleDropEntitlementGrant != nil {
-			go s.HandleDropEntitlementGrant(h, &data)
-		}
+	case "drop.entitlement.grant_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleDropEntitlementGrant)
 
-	case "extension.bits_transaction.create":
-		var data bindings.EventBitsTransactionCreate
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleExtensionBitsTransactionCreate != nil {
-			go s.HandleExtensionBitsTransactionCreate(h, &data)
-		}
+	case "extension.bits_transaction.create_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleExtensionBitsTransactionCreate)
 
-	case "stream.offline":
-		var data bindings.EventStreamOffline
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleStreamOffline != nil {
-			go s.HandleStreamOffline(h, &data)
-		}
+	case "stream.offline_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleStreamOffline)
 
-	case "stream.online":
-		var data bindings.EventStreamOnline
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleStreamOnline != nil {
-			go s.HandleStreamOnline(h, &data)
-		}
+	case "stream.online_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleStreamOnline)
 
-	case "user.authorization.grant":
-		var data bindings.EventUserAuthorizationGrant
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleUserAuthorizationGrant != nil {
-			go s.HandleUserAuthorizationGrant(h, &data)
-		}
+	case "user.authorization.grant_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleUserAuthorizationGrant)
 
-	case "user.authorization.revoke":
-		var data bindings.EventUserAuthorizationRevoke
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleUserAuthorizationRevoke != nil {
-			go s.HandleUserAuthorizationRevoke(h, &data)
-		}
+	case "user.authorization.revoke_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleUserAuthorizationRevoke)
 
-	case "user.update":
-		var data bindings.EventUserUpdate
-		if err := json.Unmarshal(notification.Event, &data); err != nil {
-			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-			return
-		}
-		if s.HandleUserUpdate != nil {
-			go s.HandleUserUpdate(h, &data)
-		}
+	case "user.update_1":
+		err = deserializeAndCallHandler(h, notification.Event, s.HandleUserUpdate)
 
 	default:
-		http.Error(w, "Unknown notification type", http.StatusBadRequest)
+		http.Error(w, "Unsupported notification type and version", http.StatusBadRequest)
+		return
+	}
+
+	if err != nil {
+		http.Error(w, "Invalid notification", http.StatusBadRequest)
 		return
 	}
 

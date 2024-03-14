@@ -9,6 +9,13 @@ import (
 	"strconv"
 )
 
+type switchCase struct {
+	EventsubMessageType    string
+	EventsubMessageVersion string
+	EventType              string
+	HandlerFieldName       string
+}
+
 func getSubHandler(node ast.Node) (*ast.StructType, bool) {
 	var subHandler *ast.StructType
 	ast.Inspect(node, func(n ast.Node) bool {
@@ -47,14 +54,21 @@ func buildHandlerCases(subHandler *ast.StructType) []switchCase {
 			continue
 		}
 
+		eventsubMessageVersion, ok := getTagValue(field.Tag.Value, "eventsub-version")
+		if !ok {
+			fmt.Printf("Warning: skipping message %q because no eventsub-version tag", eventsubMessageType)
+			continue
+		}
+
 		typ := field.Type.(*ast.IndexExpr)
 		eventTyp := typ.Index.(*ast.SelectorExpr)
 		eventTypeName := fmt.Sprintf("%s.%s", eventTyp.X.(*ast.Ident), eventTyp.Sel.Name)
 
 		cases = append(cases, switchCase{
-			EventsubMessageType: eventsubMessageType,
-			EventType:           eventTypeName,
-			HandlerFieldName:    field.Names[0].Name,
+			EventsubMessageType:    eventsubMessageType,
+			EventsubMessageVersion: eventsubMessageVersion,
+			EventType:              eventTypeName,
+			HandlerFieldName:       field.Names[0].Name,
 		})
 	}
 
