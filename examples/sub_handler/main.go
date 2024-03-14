@@ -16,7 +16,7 @@ const (
 
 func main() {
 	handler := eventsub.NewSubHandler(true, []byte(secretKey))
-	handler.HandleChannelUpdate = func(h *bindings.ResponseHeaders, event *bindings.EventChannelUpdate) {
+	handler.HandleChannelUpdate = func(h *bindings.NotificationHeaders, event *bindings.EventChannelUpdate) {
 		fmt.Println("Got a channel.update notification!")
 		fmt.Printf("Message id: %s\n", h.MessageID)
 		fmt.Printf("Channel: %s Title: %s\n", event.BroadcasterUserName, event.Title)

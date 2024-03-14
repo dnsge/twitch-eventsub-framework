@@ -1,6 +1,6 @@
 module github.com/dnsge/twitch-eventsub-framework/v2
 
-go 1.17
+go 1.18
 
 require (
 	github.com/mozillazg/go-httpheader v0.4.0
