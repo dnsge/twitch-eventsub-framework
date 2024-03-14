@@ -52,10 +52,12 @@ type SubHandler struct {
 	HandleChannelCheer func(h *esb.ResponseHeaders, event *esb.EventChannelCheer)
 	HandleChannelRaid  func(h *esb.ResponseHeaders, event *esb.EventChannelRaid)
 
-	HandleChannelBan             func(h *esb.ResponseHeaders, event *esb.EventChannelBan)
-	HandleChannelUnban           func(h *esb.ResponseHeaders, event *esb.EventChannelUnban)
-	HandleChannelModeratorAdd    func(h *esb.ResponseHeaders, event *esb.EventChannelModeratorAdd)
-	HandleChannelModeratorRemove func(h *esb.ResponseHeaders, event *esb.EventChannelModeratorRemove)
+	HandleChannelBan                 func(h *esb.ResponseHeaders, event *esb.EventChannelBan)
+	HandleChannelUnban               func(h *esb.ResponseHeaders, event *esb.EventChannelUnban)
+	HandleChannelUnbanRequestCreate  func(h *esb.ResponseHeaders, event *esb.ChannelUnbanRequestCreate)
+	HandleChannelUnbanRequestResolve func(h *esb.ResponseHeaders, event *esb.ChannelUnbanRequestResolve)
+	HandleChannelModeratorAdd        func(h *esb.ResponseHeaders, event *esb.EventChannelModeratorAdd)
+	HandleChannelModeratorRemove     func(h *esb.ResponseHeaders, event *esb.EventChannelModeratorRemove)
 
 	HandleChannelPointsRewardAdd func(
 		h *esb.ResponseHeaders,
@@ -351,6 +353,24 @@ func (s *SubHandler) handleNotification(
 		}
 		if s.HandleChannelUnban != nil {
 			go s.HandleChannelUnban(h, &data)
+		}
+	case "channel.unban_request.create":
+		var data esb.ChannelUnbanRequestCreate
+		if err := json.Unmarshal(event, &data); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+		if s.HandleChannelUnbanRequestCreate != nil {
+			go s.HandleChannelUnbanRequestCreate(h, &data)
+		}
+	case "channel.unban_request.resolve":
+		var data esb.ChannelUnbanRequestResolve
+		if err := json.Unmarshal(event, &data); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+		if s.HandleChannelUnbanRequestResolve != nil {
+			go s.HandleChannelUnbanRequestResolve(h, &data)
 		}
 	case "channel.moderator.add":
 		var data esb.EventChannelModeratorAdd
