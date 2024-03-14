@@ -34,15 +34,35 @@ type SubRequest struct {
 type Status string
 
 const (
-	StatusAny                  Status = ""
-	StatusEnabled              Status = "enabled"
-	StatusVerificationPending  Status = "webhook_callback_verification_pending"
-	StatusVerificationFailed   Status = "webhook_callback_verification_failed"
-	StatusFailuresExceeded     Status = "notification_failures_exceeded"
+	StatusAny Status = ""
+	// StatusEnabled indicates Twitch has verified your callback and is able to
+	// send you notifications.
+	StatusEnabled Status = "enabled"
+	// StatusVerificationPending indicates Twitch is verifying that you own the
+	// callback specified in the create subscription request.
+	StatusVerificationPending Status = "webhook_callback_verification_pending"
+	// StatusVerificationFailed indicates Twitch failed to verify that you own
+	// the callback specified in the create subscription request.
+	StatusVerificationFailed Status = "webhook_callback_verification_failed"
+	// StatusFailuresExceeded indicates Twitch revoked your subscription because
+	// the notification delivery failure rate was too high.
+	StatusFailuresExceeded Status = "notification_failures_exceeded"
+	// StatusAuthorizationRevoked indicates Twitch revoked your subscription
+	// because the users in the condition object revoked their authorization
+	// letting you get events on their behalf, or changed their password.
 	StatusAuthorizationRevoked Status = "authorization_revoked"
-	StatusModeratorRemoved     Status = "moderator_removed"
-	StatusUserRemoved          Status = "user_removed"
-	StatusVersionRemoved       Status = "version_removed"
+	// StatusModeratorRemoved indicates The moderator that authorized the
+	// subscription is no longer one of the broadcaster’s moderators.
+	StatusModeratorRemoved Status = "moderator_removed"
+	// StatusUserRemoved indicates Twitch revoked your subscription because
+	// the users in the condition object are no longer Twitch users.
+	StatusUserRemoved Status = "user_removed"
+	// StatusVersionRemoved indicates Twitch revoked your subscription because
+	// the subscription to subscription type and version is no longer supported
+	StatusVersionRemoved Status = "version_removed"
+	// StatusBetaMaintenance indicates Twitch revoked your subscription because
+	// the beta subscription type was undergoing maintenance.
+	StatusBetaMaintenance Status = "beta_maintenance"
 )
 
 // TwitchError describes an error from the Twitch API.
