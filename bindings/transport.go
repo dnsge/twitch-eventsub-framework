@@ -40,7 +40,7 @@ type Transport struct {
 	Secret   string `json:"secret"`
 }
 
-type ResponseHeaders struct {
+type NotificationHeaders struct {
 	MessageID           string `header:"Twitch-Eventsub-Message-Id"`
 	MessageRetry        int    `header:"Twitch-Eventsub-Message-Retry"`
 	MessageType         string `header:"Twitch-Eventsub-Message-Type"`
