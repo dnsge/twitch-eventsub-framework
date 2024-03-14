@@ -42,7 +42,7 @@ func TestSubHandler_ServeHTTP_VerificationInvalidSignature(t *testing.T) {
 
 func TestSubHandler_ServeHTTP_VerificationDynamic(t *testing.T) {
 	handler := NewSubHandler(false, nil)
-	handler.VerifyChallenge = func(h *bindings.NotificationHeaders, chal *bindings.SubscriptionChallenge) bool {
+	handler.VerifyChallenge = func(_ context.Context, h *bindings.NotificationHeaders, chal *bindings.SubscriptionChallenge) bool {
 		return h.SubscriptionType == "channel.update"
 	}
 
