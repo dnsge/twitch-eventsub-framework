@@ -12,7 +12,7 @@ Framework for Twitch EventSub applications built with webhooks
 
 `go get -u github.com/dnsge/twitch-eventsub-framework/v2`
 
-Go 1.18+ is required.
+Go 1.21+ is required.
 
 ## Quick Start
 
