@@ -1,6 +1,6 @@
-# twitch-eventsub-framework
-
 <div align="center">
+
+<h1>twitch-eventsub-framework</h1>
 
 Framework for Twitch EventSub applications built with webhooks
 
