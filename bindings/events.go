@@ -82,8 +82,9 @@ type EventChannelUpdate struct {
 	CategoryID string `json:"category_id"`
 	// The category name.
 	CategoryName string `json:"category_name"`
-	// A boolean identifying whether the channel is flagged as mature. Valid values are true and false.
-	IsMature bool `json:"is_mature"`
+	// Array of content classification label IDs currently applied on the Channel. To retrieve a list of all possible
+	// IDs, use the Get Content Classification Labels API endpoint.
+	ContentClassificationLabels []string `json:"content_classification_labels"`
 }
 
 type EventChannelUnban struct {

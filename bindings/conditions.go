@@ -38,6 +38,9 @@ type ConditionChannelUpdate struct {
 type ConditionChannelFollow struct {
 	// The broadcaster user ID for the channel you want to get follow notifications for.
 	BroadcasterUserID string `json:"broadcaster_user_id"`
+	// The ID of the moderator of the channel you want to get follow notifications for. If you have authorization from
+	// the broadcaster rather than a moderator, specify the broadcaster’s user ID here.
+	ModeratorUserID string `json:"moderator_user_id"`
 }
 
 type ConditionChannelUnban struct {

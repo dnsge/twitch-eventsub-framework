@@ -42,8 +42,8 @@ type SubHandler struct {
 	// EventSub notification as duplicate.
 	OnDuplicateNotification func(ctx context.Context, h *bindings.NotificationHeaders)
 
-	HandleChannelUpdate                       EventHandler[bindings.EventChannelUpdate]                       `eventsub-type:"channel.update" eventsub-version:"1"`
-	HandleChannelFollow                       EventHandler[bindings.EventChannelFollow]                       `eventsub-type:"channel.follow" eventsub-version:"1"`
+	HandleChannelUpdate                       EventHandler[bindings.EventChannelUpdate]                       `eventsub-type:"channel.update" eventsub-version:"2"`
+	HandleChannelFollow                       EventHandler[bindings.EventChannelFollow]                       `eventsub-type:"channel.follow" eventsub-version:"2"`
 	HandleChannelSubscribe                    EventHandler[bindings.EventChannelSubscribe]                    `eventsub-type:"channel.subscribe" eventsub-version:"1"`
 	HandleChannelSubscriptionEnd              EventHandler[bindings.EventChannelSubscriptionEnd]              `eventsub-type:"channel.subscription.end" eventsub-version:"1"`
 	HandleChannelSubscriptionGift             EventHandler[bindings.EventChannelSubscriptionGift]             `eventsub-type:"channel.subscription.gift" eventsub-version:"1"`
@@ -52,8 +52,8 @@ type SubHandler struct {
 	HandleChannelRaid                         EventHandler[bindings.EventChannelRaid]                         `eventsub-type:"channel.raid" eventsub-version:"1"`
 	HandleChannelBan                          EventHandler[bindings.EventChannelBan]                          `eventsub-type:"channel.ban" eventsub-version:"1"`
 	HandleChannelUnban                        EventHandler[bindings.EventChannelUnban]                        `eventsub-type:"channel.unban" eventsub-version:"1"`
-	HandleChannelUnbanRequestCreate           EventHandler[bindings.EventChannelUnbanRequestCreate]           `eventsub-type:"channel.unban_request.create" eventsub-version:"1"`
-	HandleChannelUnbanRequestResolve          EventHandler[bindings.EventChannelUnbanRequestResolve]          `eventsub-type:"channel.unban_request.resolve" eventsub-version:"1"`
+	HandleChannelUnbanRequestCreate           EventHandler[bindings.EventChannelUnbanRequestCreate]           `eventsub-type:"channel.unban_request.create" eventsub-version:"beta"`
+	HandleChannelUnbanRequestResolve          EventHandler[bindings.EventChannelUnbanRequestResolve]          `eventsub-type:"channel.unban_request.resolve" eventsub-version:"beta"`
 	HandleChannelModeratorAdd                 EventHandler[bindings.EventChannelModeratorAdd]                 `eventsub-type:"channel.moderator.add" eventsub-version:"1"`
 	HandleChannelModeratorRemove              EventHandler[bindings.EventChannelModeratorRemove]              `eventsub-type:"channel.moderator.remove" eventsub-version:"1"`
 	HandleChannelPointsRewardAdd              EventHandler[bindings.EventChannelPointsRewardAdd]              `eventsub-type:"channel.channel_points_custom_reward.add" eventsub-version:"1"`

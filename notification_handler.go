@@ -73,7 +73,7 @@ func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte,
 	case "channel.cheer_1":
 		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelCheer)
 
-	case "channel.follow_1":
+	case "channel.follow_2":
 		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelFollow)
 
 	case "channel.goal.begin_1":
@@ -139,13 +139,13 @@ func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte,
 	case "channel.unban_1":
 		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUnban)
 
-	case "channel.unban_request.create_1":
+	case "channel.unban_request.create_beta":
 		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUnbanRequestCreate)
 
-	case "channel.unban_request.resolve_1":
+	case "channel.unban_request.resolve_beta":
 		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUnbanRequestResolve)
 
-	case "channel.update_1":
+	case "channel.update_2":
 		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUpdate)
 
 	case "drop.entitlement.grant_1":
