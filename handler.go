@@ -11,6 +11,7 @@ import (
 	"github.com/mozillazg/go-httpheader"
 
 	"github.com/dnsge/twitch-eventsub-framework/v2/bindings"
+	"github.com/dnsge/twitch-eventsub-framework/v2/bindings/beta"
 )
 
 const (
@@ -52,8 +53,6 @@ type SubHandler struct {
 	HandleChannelRaid                         EventHandler[bindings.EventChannelRaid]                         `eventsub-type:"channel.raid" eventsub-version:"1"`
 	HandleChannelBan                          EventHandler[bindings.EventChannelBan]                          `eventsub-type:"channel.ban" eventsub-version:"1"`
 	HandleChannelUnban                        EventHandler[bindings.EventChannelUnban]                        `eventsub-type:"channel.unban" eventsub-version:"1"`
-	HandleChannelUnbanRequestCreate           EventHandler[bindings.EventChannelUnbanRequestCreate]           `eventsub-type:"channel.unban_request.create" eventsub-version:"beta"`
-	HandleChannelUnbanRequestResolve          EventHandler[bindings.EventChannelUnbanRequestResolve]          `eventsub-type:"channel.unban_request.resolve" eventsub-version:"beta"`
 	HandleChannelModeratorAdd                 EventHandler[bindings.EventChannelModeratorAdd]                 `eventsub-type:"channel.moderator.add" eventsub-version:"1"`
 	HandleChannelModeratorRemove              EventHandler[bindings.EventChannelModeratorRemove]              `eventsub-type:"channel.moderator.remove" eventsub-version:"1"`
 	HandleChannelPointsRewardAdd              EventHandler[bindings.EventChannelPointsRewardAdd]              `eventsub-type:"channel.channel_points_custom_reward.add" eventsub-version:"1"`
@@ -86,6 +85,12 @@ type SubHandler struct {
 	HandleChannelChatClearUserMessages        EventHandler[bindings.EventChannelChatClearUserMessages]        `eventsub-type:"channel.chat.clear_user_messages" eventsub-version:"1"`
 	HandleChannelChatMessageDelete            EventHandler[bindings.EventChannelChatMessageDelete]            `eventsub-type:"channel.chat.message_delete" eventsub-version:"1"`
 	HandleChannelChatNotification             EventHandler[bindings.EventChannelChatNotification]             `eventsub-type:"channel.chat.notification" eventsub-version:"1"`
+
+	// ======================================================
+	// NOTE: Beta handlers, may break backwards-compatibility
+	// ======================================================
+	HandleChannelUnbanRequestCreate  EventHandler[beta.EventChannelUnbanRequestCreate]  `eventsub-type:"channel.unban_request.create" eventsub-version:"beta"`
+	HandleChannelUnbanRequestResolve EventHandler[beta.EventChannelUnbanRequestResolve] `eventsub-type:"channel.unban_request.resolve" eventsub-version:"beta"`
 }
 
 func NewSubHandler(doSignatureVerification bool, secret []byte) *SubHandler {
