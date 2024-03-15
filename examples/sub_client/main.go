@@ -19,7 +19,8 @@ const (
 func main() {
 	client := eventsub.NewSubClient(eventsub.NewStaticCredentials(clientID, appToken))
 	res, _ := client.Subscribe(context.Background(), &eventsub.SubRequest{
-		Type: "channel.update",
+		Type:    "channel.update",
+		Version: "2",
 		Condition: bindings.ConditionChannelUpdate{
 			BroadcasterUserID: "22484632",
 		},

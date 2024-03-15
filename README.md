@@ -40,7 +40,8 @@ client := eventsub.NewSubClient(eventsub.NewStaticCredentials(clientID, appToken
 
 // Subscribe to channel.update events for forsen
 client.Subscribe(context.Background(), &eventsub.SubRequest{
-    Type: "channel.update",
+    Type:    "channel.update", 
+    Version: "2",
     Condition: bindings.ConditionChannelUpdate{
         BroadcasterUserID: "22484632",
     },
