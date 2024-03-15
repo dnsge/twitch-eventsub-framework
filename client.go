@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,22 +14,25 @@ import (
 )
 
 const (
-	EventSubSubscriptionsEndpoint = "https://api.twitch.tv/helix/eventsub/subscriptions"
+	subscriptionsEndpoint = "https://api.twitch.tv/helix/eventsub/subscriptions"
+	pageSize              = "100"
+)
 
-	pageSize = "100"
+var (
+	ErrEmptySubscriptionVersion = errors.New("empty subscription version")
 )
 
 type SubRequest struct {
 	// The type of event being subscribed to.
 	Type string
+	// The subscription type version.
+	Version string
 	// The parameters under which the event will be fired.
 	Condition interface{}
 	// The Webhook HTTP callback address.
 	Callback string
 	// The HMAC secret used to verify the event data.
 	Secret string
-	// The subscription type version.
-	Version string
 }
 
 type Status string
@@ -156,7 +160,7 @@ func (s *SubClient) do(req *http.Request) (*http.Response, error) {
 func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*bindings.RequestStatus, error) {
 	// set default version to 1, so we can omit that parameter in request for backward compatibility
 	if srq.Version == "" {
-		srq.Version = "1"
+		return nil, ErrEmptySubscriptionVersion
 	}
 
 	reqJSON := bindings.Request{
@@ -176,7 +180,7 @@ func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*bindings.R
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", EventSubSubscriptionsEndpoint, buf)
+	req, err := http.NewRequestWithContext(ctx, "POST", subscriptionsEndpoint, buf)
 	if err != nil {
 		return nil, err
 	}
@@ -197,9 +201,9 @@ func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*bindings.R
 
 // Unsubscribe deletes a Webhook subscription by the subscription's ID.
 func (s *SubClient) Unsubscribe(ctx context.Context, subscriptionID string) error {
-	u, err := url.Parse(EventSubSubscriptionsEndpoint)
+	u, err := url.Parse(subscriptionsEndpoint)
 	if err != nil {
-		return fmt.Errorf("unsubscribe: parse EventSubSubscriptionsEndpoint url: %w", err)
+		return fmt.Errorf("unsubscribe: parse subscriptionsEndpoint url: %w", err)
 	}
 
 	q := u.Query()
@@ -260,9 +264,9 @@ func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (
 // Get the subscriptions with a specific pagination cursor
 func (s *SubClient) getSubscriptions(ctx context.Context, statusFilter Status, cursor string) (*bindings.RequestStatus, error) {
 	// First, construct the request url with the proper query parameters.
-	u, err := url.Parse(EventSubSubscriptionsEndpoint)
+	u, err := url.Parse(subscriptionsEndpoint)
 	if err != nil {
-		return nil, fmt.Errorf("get subscriptions: parse EventSubSubscriptionsEndpoint url: %w", err)
+		return nil, fmt.Errorf("get subscriptions: parse subscriptionsEndpoint url: %w", err)
 	}
 
 	q := u.Query()
