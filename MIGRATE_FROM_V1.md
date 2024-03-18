@@ -14,7 +14,12 @@ Multiple breaking changes were made to the API while creating version 2 of `twit
 - `Handler.VerifyChallenge` takes `context.Context`
 - `Handler.OnDuplicateNotification` takes `context.Context`
 - `Credientials` interface takes `context.Context`
+- Event handlers now have the following signature: 
+```go
+type EventHandler[EventMessage any] func(headers bindings.NotificationHeaders, sub bindings.Subscription, event EventMessage)
+```
 
 ## New:
 - `TrackerFunc` wrapper helper
 - `Handler` handler functions are now generated from the struct definition
+- `Handler` now has `BeforeHandleEvent` to trigger logic before dispatching the appropriate event handler

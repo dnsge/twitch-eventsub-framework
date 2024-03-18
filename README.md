@@ -58,6 +58,10 @@ client.Subscribe(context.Background(), &eventsub.SubRequest{
 1. See [examples/sub_client/main.go](examples/sub_client/main.go) for an example usage of creating a new webhook subscription.
 2. See [examples/sub_handler/main.go](examples/sub_handler/main.go) for an example usage of receiving webhook notifications from Twitch.
 
+## Migrating to v2
+
+See [MIGRATE_FROM_V1.md](MIGRATE_FROM_V1.md) for details on the differences between v1 and v2.
+
 [doc-img]: https://pkg.go.dev/badge/github.com/dnsge/twitch-eventsub-framework/v2
 [doc]: https://pkg.go.dev/github.com/dnsge/twitch-eventsub-framework/v2
 [ci-img]: https://github.com/dnsge/twitch-eventsub-framework/actions/workflows/go.yml/badge.svg?branch=v2
