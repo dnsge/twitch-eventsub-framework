@@ -16,6 +16,7 @@ var (
 package eventsub
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -24,7 +25,7 @@ import (
 
 func deserializeAndCallHandler[EventType any](
 	h *bindings.NotificationHeaders, 
-	event json.RawMessage, 
+	notification bindings.EventNotification,
 	handler EventHandler[EventType],
 ) error {
 	if handler == nil {
@@ -32,19 +33,28 @@ func deserializeAndCallHandler[EventType any](
 	}
 
 	var data EventType
-	if err := json.Unmarshal(event, &data); err != nil {
+	if err := json.Unmarshal(notification.Event, &data); err != nil {
 		return err
 	}
 
-	go handler(h, &data)
+	go handler(*h, notification.Subscription, data)
 	return nil
 }
 
-func (h *Handler) handleNotification(w http.ResponseWriter, bodyBytes []byte, headers *bindings.NotificationHeaders) {
+func (h *Handler) handleNotification(
+	ctx context.Context,
+	w http.ResponseWriter,
+	bodyBytes []byte,
+	headers *bindings.NotificationHeaders,
+) {
 	var notification bindings.EventNotification
 	if err := json.Unmarshal(bodyBytes, &notification); err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
+	}
+
+	if h.BeforeHandleEvent != nil {
+		h.BeforeHandleEvent(ctx, headers, &notification)
 	}
 
 	var err error
@@ -66,7 +76,7 @@ func (h *Handler) handleNotification(w http.ResponseWriter, bodyBytes []byte, he
 
 	switchCaseTemplate = template.Must(template.New("switch").Parse(`
 case "{{ .EventsubMessageType }}_{{ .EventsubMessageVersion }}":
-	err = deserializeAndCallHandler(headers, notification.Event, h.{{ .HandlerFieldName }});
+	err = deserializeAndCallHandler(headers, notification, h.{{ .HandlerFieldName }});
 `))
 )
 

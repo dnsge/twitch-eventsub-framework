@@ -23,7 +23,7 @@ Use a `Handler` to listen for incoming notifications from Twitch servers.
 handler := eventsub.NewHandler(nil)
 
 // Process channel.update EventSub notifications
-handler.HandleChannelUpdate = func(h *bindings.NotificationHeaders, event *bindings.EventChannelUpdate) {
+handler.HandleChannelUpdate = func(h bindings.NotificationHeaders, sub bindings.Subscription, event bindings.EventChannelUpdate) {
     fmt.Println("Got a channel.update notification!")
     fmt.Printf("Channel = %s, Title = %s\n", event.BroadcasterUserName, event.Title)
 }

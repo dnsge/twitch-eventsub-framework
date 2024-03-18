@@ -20,7 +20,7 @@ const (
 )
 
 // EventHandler is an event callback to process a notification from EventSub.
-type EventHandler[EventMessage any] func(*bindings.NotificationHeaders, *EventMessage)
+type EventHandler[EventMessage any] func(headers bindings.NotificationHeaders, sub bindings.Subscription, event EventMessage)
 
 // Handler implements http.Handler to receive Twitch EventSub webhook requests.
 //
@@ -28,6 +28,16 @@ type EventHandler[EventMessage any] func(*bindings.NotificationHeaders, *EventMe
 // event notifications. To handle a specific event, set the corresponding
 // HandleXXX struct field. When a notification is received and validated, the
 // handler function will be invoked in a new goroutine.
+//
+// To conditionally verify challenges, set the VerifyChallenge function.
+//
+// To deduplicate EventSub notifications sent by Twitch (highly recommended),
+// set IDTracker to proper implementation of the IDTracker interface. Set
+// OnDuplicateNotification to perform some custom logic when a duplicate
+// notification is detected by the set IDTracker.
+//
+// To perform some logic before processing every request (e.g. log something,
+// metrics, tracing), set BeforeHandleEvent.
 type Handler struct {
 	// Secret used to compute signature, or nil if not enabled.
 	signatureSecret []byte
@@ -36,11 +46,17 @@ type Handler struct {
 	// should be accepted.
 	VerifyChallenge func(context.Context, *bindings.NotificationHeaders, *bindings.SubscriptionChallenge) bool
 
-	// IDTracker used to deduplicate notifications
+	// IDTracker used to deduplicate notifications.
 	IDTracker IDTracker
 	// OnDuplicateNotification is called when the provided IDTracker rejects a
-	// EventSub notification as duplicate.
+	// EventSub notification as duplicate. Completes before returning a response
+	// to Twitch, so this function should not take too long to execute.
 	OnDuplicateNotification func(context.Context, *bindings.NotificationHeaders)
+
+	// BeforeHandleEvent is called with the request context, the notification
+	// headers, raw event notification body. Completes before executing the event
+	// handler.
+	BeforeHandleEvent func(context.Context, *bindings.NotificationHeaders, *bindings.EventNotification)
 
 	HandleChannelUpdate                       EventHandler[bindings.EventChannelUpdate]                       `eventsub-type:"channel.update" eventsub-version:"2"`
 	HandleChannelFollow                       EventHandler[bindings.EventChannelFollow]                       `eventsub-type:"channel.follow" eventsub-version:"2"`
@@ -151,7 +167,7 @@ func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
 		h.handleVerification(w, r, bodyBytes, &headers)
 		return
 	case notificationMessageType:
-		h.handleNotification(w, bodyBytes, &headers)
+		h.handleNotification(r.Context(), w, bodyBytes, &headers)
 		return
 	default:
 		http.Error(w, "Unknown message type", http.StatusBadRequest)

@@ -83,7 +83,7 @@ func TestHandler_ServeHTTP_IDTracker(t *testing.T) {
 func TestHandler_ServeHTTP_Notification(t *testing.T) {
 	d := newDispatcher(1)
 	handler := NewHandler(nil)
-	handler.HandleChannelUpdate = func(h *bindings.NotificationHeaders, event *bindings.EventChannelUpdate) {
+	handler.HandleChannelUpdate = func(h bindings.NotificationHeaders, sub bindings.Subscription, event bindings.EventChannelUpdate) {
 		d.Trigger()
 	}
 
@@ -95,7 +95,7 @@ func TestHandler_ServeHTTP_Notification(t *testing.T) {
 
 func TestHandler_ServeHTTP_NotificationBadVersion(t *testing.T) {
 	handler := NewHandler(nil)
-	handler.HandleChannelUpdate = func(h *bindings.NotificationHeaders, event *bindings.EventChannelUpdate) {
+	handler.HandleChannelUpdate = func(h bindings.NotificationHeaders, sub bindings.Subscription, event bindings.EventChannelUpdate) {
 		panic("should not be called")
 	}
 
