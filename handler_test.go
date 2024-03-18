@@ -16,8 +16,8 @@ import (
 
 const secret = `hey this is really secret`
 
-func TestSubHandler_ServeHTTP_VerificationBasic(t *testing.T) {
-	handler := NewSubHandler(true, []byte(secret))
+func TestHandler_ServeHTTP_VerificationBasic(t *testing.T) {
+	handler := NewHandler([]byte(secret))
 	res := handleRequest(handler, newVerificationRequest)
 	body, _ := io.ReadAll(res.Body)
 	_ = res.Body.Close()
@@ -26,8 +26,8 @@ func TestSubHandler_ServeHTTP_VerificationBasic(t *testing.T) {
 	assert.Equal(t, body, []byte("olYc8-klwIH9BthhWWhTU-AhJQ0eatixVF2y6x3G5kk"))
 }
 
-func TestSubHandler_ServeHTTP_VerificationInvalidSignature(t *testing.T) {
-	handler := NewSubHandler(true, []byte(secret))
+func TestHandler_ServeHTTP_VerificationInvalidSignature(t *testing.T) {
+	handler := NewHandler([]byte(secret))
 
 	// Test invalid signature
 	res := handleRequest(handler, newBadVerificationRequest)
@@ -40,8 +40,8 @@ func TestSubHandler_ServeHTTP_VerificationInvalidSignature(t *testing.T) {
 	assert.Equal(t, res.StatusCode, http.StatusForbidden)
 }
 
-func TestSubHandler_ServeHTTP_VerificationDynamic(t *testing.T) {
-	handler := NewSubHandler(false, nil)
+func TestHandler_ServeHTTP_VerificationDynamic(t *testing.T) {
+	handler := NewHandler(nil)
 	handler.VerifyChallenge = func(_ context.Context, h *bindings.NotificationHeaders, chal *bindings.SubscriptionChallenge) bool {
 		return h.SubscriptionType == "channel.update"
 	}
@@ -60,8 +60,8 @@ func TestSubHandler_ServeHTTP_VerificationDynamic(t *testing.T) {
 	assert.Equal(t, res.StatusCode, http.StatusBadRequest)
 }
 
-func TestSubHandler_ServeHTTP_IDTracker(t *testing.T) {
-	handler := NewSubHandler(false, nil)
+func TestHandler_ServeHTTP_IDTracker(t *testing.T) {
+	handler := NewHandler(nil)
 	tracker := &wrapper{m: NewMapTracker(), DuplicateSeen: false}
 	handler.IDTracker = tracker
 
@@ -80,9 +80,9 @@ func TestSubHandler_ServeHTTP_IDTracker(t *testing.T) {
 	assert.True(t, tracker.DuplicateSeen)
 }
 
-func TestSubHandler_ServeHTTP_Notification(t *testing.T) {
+func TestHandler_ServeHTTP_Notification(t *testing.T) {
 	d := newDispatcher(1)
-	handler := NewSubHandler(false, nil)
+	handler := NewHandler(nil)
 	handler.HandleChannelUpdate = func(h *bindings.NotificationHeaders, event *bindings.EventChannelUpdate) {
 		d.Trigger()
 	}
@@ -93,8 +93,8 @@ func TestSubHandler_ServeHTTP_Notification(t *testing.T) {
 	assert.True(t, d.WaitForTrigger(100*time.Millisecond), "HandleChannelUpdate failed to trigger")
 }
 
-func TestSubHandler_ServeHTTP_NotificationBadVersion(t *testing.T) {
-	handler := NewSubHandler(false, nil)
+func TestHandler_ServeHTTP_NotificationBadVersion(t *testing.T) {
+	handler := NewHandler(nil)
 	handler.HandleChannelUpdate = func(h *bindings.NotificationHeaders, event *bindings.EventChannelUpdate) {
 		panic("should not be called")
 	}
@@ -104,7 +104,7 @@ func TestSubHandler_ServeHTTP_NotificationBadVersion(t *testing.T) {
 	assert.True(t, !isOK(res.StatusCode))
 }
 
-func handleRequest(handler *SubHandler, reqFactory func() *http.Request) *http.Response {
+func handleRequest(handler *Handler, reqFactory func() *http.Request) *http.Response {
 	verificationReq := reqFactory()
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, verificationReq)

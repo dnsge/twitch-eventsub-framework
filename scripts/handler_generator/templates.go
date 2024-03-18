@@ -40,7 +40,7 @@ func deserializeAndCallHandler[EventType any](
 	return nil
 }
 
-func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte, h *bindings.NotificationHeaders) {
+func (h *Handler) handleNotification(w http.ResponseWriter, bodyBytes []byte, headers *bindings.NotificationHeaders) {
 	var notification bindings.EventNotification
 	if err := json.Unmarshal(bodyBytes, &notification); err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
@@ -48,7 +48,7 @@ func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte,
 	}
 
 	var err error
-	selector := h.SubscriptionType + "_" + h.SubscriptionVersion
+	selector := headers.SubscriptionType + "_" + headers.SubscriptionVersion
 	switch selector { {{ .SwitchCases }}
 	default:
 		http.Error(w, "Unsupported notification type and version", http.StatusBadRequest)
@@ -66,7 +66,7 @@ func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte,
 
 	switchCaseTemplate = template.Must(template.New("switch").Parse(`
 case "{{ .EventsubMessageType }}_{{ .EventsubMessageVersion }}":
-	err = deserializeAndCallHandler(h, notification.Event, s.{{ .HandlerFieldName }});
+	err = deserializeAndCallHandler(headers, notification.Event, h.{{ .HandlerFieldName }});
 `))
 )
 

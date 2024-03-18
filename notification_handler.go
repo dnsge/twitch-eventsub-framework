@@ -27,7 +27,7 @@ func deserializeAndCallHandler[EventType any](
 	return nil
 }
 
-func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte, h *bindings.NotificationHeaders) {
+func (h *Handler) handleNotification(w http.ResponseWriter, bodyBytes []byte, headers *bindings.NotificationHeaders) {
 	var notification bindings.EventNotification
 	if err := json.Unmarshal(bodyBytes, &notification); err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
@@ -35,139 +35,139 @@ func (s *SubHandler) handleNotification(w http.ResponseWriter, bodyBytes []byte,
 	}
 
 	var err error
-	selector := h.SubscriptionType + "_" + h.SubscriptionVersion
+	selector := headers.SubscriptionType + "_" + headers.SubscriptionVersion
 	switch selector {
 	case "channel.ban_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelBan)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelBan)
 
 	case "channel.channel_points_custom_reward.add_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPointsRewardAdd)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPointsRewardAdd)
 
 	case "channel.channel_points_custom_reward.remove_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPointsRewardRemove)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPointsRewardRemove)
 
 	case "channel.channel_points_custom_reward.update_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPointsRewardUpdate)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPointsRewardUpdate)
 
 	case "channel.channel_points_custom_reward_redemption.add_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPointsRewardRedemptionAdd)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPointsRewardRedemptionAdd)
 
 	case "channel.channel_points_custom_reward_redemption.update_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPointsRewardRedemptionUpdate)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPointsRewardRedemptionUpdate)
 
 	case "channel.chat.clear_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelChatClear)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelChatClear)
 
 	case "channel.chat.clear_user_messages_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelChatClearUserMessages)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelChatClearUserMessages)
 
 	case "channel.chat.message_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelChatMessage)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelChatMessage)
 
 	case "channel.chat.message_delete_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelChatMessageDelete)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelChatMessageDelete)
 
 	case "channel.chat.notification_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelChatNotification)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelChatNotification)
 
 	case "channel.cheer_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelCheer)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelCheer)
 
 	case "channel.follow_2":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelFollow)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelFollow)
 
 	case "channel.goal.begin_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleGoalBegin)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleGoalBegin)
 
 	case "channel.goal.end_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleGoalEnd)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleGoalEnd)
 
 	case "channel.goal.progress_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleGoalProgress)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleGoalProgress)
 
 	case "channel.hype_train.begin_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleHypeTrainBegin)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleHypeTrainBegin)
 
 	case "channel.hype_train.end_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleHypeTrainEnd)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleHypeTrainEnd)
 
 	case "channel.hype_train.progress_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleHypeTrainProgress)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleHypeTrainProgress)
 
 	case "channel.moderator.add_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelModeratorAdd)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelModeratorAdd)
 
 	case "channel.moderator.remove_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelModeratorRemove)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelModeratorRemove)
 
 	case "channel.poll.begin_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPollBegin)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPollBegin)
 
 	case "channel.poll.end_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPollEnd)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPollEnd)
 
 	case "channel.poll.progress_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPollProgress)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPollProgress)
 
 	case "channel.prediction.begin_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPredictionBegin)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPredictionBegin)
 
 	case "channel.prediction.end_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPredictionEnd)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPredictionEnd)
 
 	case "channel.prediction.lock_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPredictionLock)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPredictionLock)
 
 	case "channel.prediction.progress_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelPredictionProgress)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelPredictionProgress)
 
 	case "channel.raid_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelRaid)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelRaid)
 
 	case "channel.subscribe_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelSubscribe)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelSubscribe)
 
 	case "channel.subscription.end_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelSubscriptionEnd)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelSubscriptionEnd)
 
 	case "channel.subscription.gift_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelSubscriptionGift)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelSubscriptionGift)
 
 	case "channel.subscription.message_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelSubscriptionMessage)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelSubscriptionMessage)
 
 	case "channel.unban_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUnban)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelUnban)
 
 	case "channel.unban_request.create_beta":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUnbanRequestCreate)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelUnbanRequestCreate)
 
 	case "channel.unban_request.resolve_beta":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUnbanRequestResolve)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelUnbanRequestResolve)
 
 	case "channel.update_2":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleChannelUpdate)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleChannelUpdate)
 
 	case "drop.entitlement.grant_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleDropEntitlementGrant)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleDropEntitlementGrant)
 
 	case "extension.bits_transaction.create_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleExtensionBitsTransactionCreate)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleExtensionBitsTransactionCreate)
 
 	case "stream.offline_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleStreamOffline)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleStreamOffline)
 
 	case "stream.online_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleStreamOnline)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleStreamOnline)
 
 	case "user.authorization.grant_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleUserAuthorizationGrant)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleUserAuthorizationGrant)
 
 	case "user.authorization.revoke_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleUserAuthorizationRevoke)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleUserAuthorizationRevoke)
 
 	case "user.update_1":
-		err = deserializeAndCallHandler(h, notification.Event, s.HandleUserUpdate)
+		err = deserializeAndCallHandler(headers, notification.Event, h.HandleUserUpdate)
 
 	default:
 		http.Error(w, "Unsupported notification type and version", http.StatusBadRequest)

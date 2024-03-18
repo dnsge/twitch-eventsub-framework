@@ -22,15 +22,13 @@ const (
 // EventHandler is an event callback to process a notification from EventSub.
 type EventHandler[EventMessage any] func(h *bindings.NotificationHeaders, event *EventMessage)
 
-// SubHandler implements http.Handler to receive Twitch webhook notifications.
+// Handler implements http.Handler to receive Twitch EventSub webhook requests.
 //
-// SubHandler handles both verification of new subscriptions and dispatching of
+// Handler handles both verification of new subscriptions and dispatching of
 // event notifications. To handle a specific event, set the corresponding
 // HandleXXX struct field. When a notification is received and validated, the
 // handler function will be invoked in a new goroutine.
-type SubHandler struct {
-	// Whether to perform signature verification before handling notifications.
-	doSignatureVerification bool
+type Handler struct {
 	// Secret used to compute signature, or nil if not enabled.
 	signatureSecret []byte
 
@@ -93,26 +91,25 @@ type SubHandler struct {
 	HandleChannelUnbanRequestResolve EventHandler[beta.EventChannelUnbanRequestResolve] `eventsub-type:"channel.unban_request.resolve" eventsub-version:"beta"`
 }
 
-func NewSubHandler(doSignatureVerification bool, secret []byte) *SubHandler {
-	if doSignatureVerification && secret == nil {
-		panic("secret must be set if signature verification is enabled")
-	}
-
-	return &SubHandler{
-		doSignatureVerification: doSignatureVerification,
-		signatureSecret:         secret,
+// NewHandler creates a new, empty EventSub handler. It implements http.Handler.
+//
+// When passed a non-nil secret, validation of notification events will be enabled
+// and computed using the secret.
+func NewHandler(secret []byte) *Handler {
+	return &Handler{
+		signatureSecret: secret,
 	}
 }
 
-func (s *SubHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		s.handlePost(w, r)
+		h.handlePost(w, r)
 	} else {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-func (s *SubHandler) handlePost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
 	// Read body into buffer
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -122,38 +119,38 @@ func (s *SubHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 	_ = r.Body.Close()
 
 	// Verify request signature
-	if valid, err := s.verifySignature(r, bodyBytes); err != nil || !valid {
+	if valid, err := h.verifySignature(r, bodyBytes); err != nil || !valid {
 		http.Error(w, "Invalid request signature", http.StatusForbidden)
 		return
 	}
 
 	// Decode request headers to verify and dispatch payload
-	var h bindings.NotificationHeaders
-	if err := httpheader.Decode(r.Header, &h); err != nil {
+	var headers bindings.NotificationHeaders
+	if err := httpheader.Decode(r.Header, &headers); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	isDuplicate, err := s.checkIfDuplicate(r, &h)
+	isDuplicate, err := h.checkIfDuplicate(r, &headers)
 	if err != nil {
 		// Error occurred while checking IDTracker
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	} else if isDuplicate {
 		// Call OnDuplicateNotification handler if set
-		if s.OnDuplicateNotification != nil {
-			s.OnDuplicateNotification(r.Context(), &h)
+		if h.OnDuplicateNotification != nil {
+			h.OnDuplicateNotification(r.Context(), &headers)
 		}
 		writeEmptyOK(w) // ignore and return 2XX code
 		return
 	}
 
-	switch h.MessageType {
+	switch headers.MessageType {
 	case webhookCallbackVerification:
-		s.handleVerification(w, r, bodyBytes, &h)
+		h.handleVerification(w, r, bodyBytes, &headers)
 		return
 	case notificationMessageType:
-		s.handleNotification(w, bodyBytes, &h)
+		h.handleNotification(w, bodyBytes, &headers)
 		return
 	default:
 		http.Error(w, "Unknown message type", http.StatusBadRequest)
@@ -163,29 +160,29 @@ func (s *SubHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 
 // verifySignature verifies the Twitch-Eventsub-Message-Signature of the request.
 // Returns whether the verification succeeded.
-func (s *SubHandler) verifySignature(r *http.Request, body []byte) (bool, error) {
-	if !s.doSignatureVerification {
+func (h *Handler) verifySignature(r *http.Request, body []byte) (bool, error) {
+	if h.signatureSecret == nil {
 		return true, nil
 	}
-	return VerifyRequestSignature(r, body, s.signatureSecret)
+	return VerifyRequestSignature(r, body, h.signatureSecret)
 }
 
 // checkIfDuplicate returns whether the IDTracker reports this notification is
 // a duplicate. If it is a duplicate, it writes a 2xx response and returns true.
 // Otherwise, it returns false.
-func (s *SubHandler) checkIfDuplicate(r *http.Request, h *bindings.NotificationHeaders) (bool, error) {
-	if s.IDTracker == nil {
+func (h *Handler) checkIfDuplicate(r *http.Request, headers *bindings.NotificationHeaders) (bool, error) {
+	if h.IDTracker == nil {
 		return false, nil
 	}
 
-	duplicate, err := s.IDTracker.AddAndCheckIfDuplicate(r.Context(), h.MessageID)
+	duplicate, err := h.IDTracker.AddAndCheckIfDuplicate(r.Context(), headers.MessageID)
 	if err != nil {
 		return false, err
 	}
 	return duplicate, nil
 }
 
-func (s *SubHandler) handleVerification(
+func (h *Handler) handleVerification(
 	w http.ResponseWriter,
 	r *http.Request,
 	bodyBytes []byte,
@@ -197,7 +194,7 @@ func (s *SubHandler) handleVerification(
 		return
 	}
 
-	if s.VerifyChallenge == nil || s.VerifyChallenge(r.Context(), headers, &data) {
+	if h.VerifyChallenge == nil || h.VerifyChallenge(r.Context(), headers, &data) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(data.Challenge))

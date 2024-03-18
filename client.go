@@ -92,14 +92,14 @@ func (t *TwitchError) Error() string {
 	}
 }
 
-type SubClient struct {
+type Client struct {
 	httpClient  *http.Client
 	credentials Credentials
 }
 
-// NewSubClient creates a new SubClient with the given Credentials provider.
-func NewSubClient(credentials Credentials) *SubClient {
-	return &SubClient{
+// NewClient creates a new Client with the given Credentials provider.
+func NewClient(credentials Credentials) *Client {
+	return &Client{
 		httpClient: &http.Client{
 			Timeout: time.Second * 3,
 		},
@@ -107,10 +107,10 @@ func NewSubClient(credentials Credentials) *SubClient {
 	}
 }
 
-// NewSubClientHTTP creates a new SubClient with the given Credentials provider
+// NewClientHTTP creates a new Client with the given Credentials provider
 // and http.Client instance.
-func NewSubClientHTTP(credentials Credentials, client *http.Client) *SubClient {
-	return &SubClient{
+func NewClientHTTP(credentials Credentials, client *http.Client) *Client {
+	return &Client{
 		httpClient:  client,
 		credentials: credentials,
 	}
@@ -121,7 +121,7 @@ func NewSubClientHTTP(credentials Credentials, client *http.Client) *SubClient {
 //
 // If the returned error is non-nil, the caller must  close the returned
 // response body. The returned response is guaranteed to have a 2xx status code.
-func (s *SubClient) do(req *http.Request) (*http.Response, error) {
+func (s *Client) do(req *http.Request) (*http.Response, error) {
 	clientID, err := s.credentials.ClientID(req.Context())
 	if err != nil {
 		return nil, fmt.Errorf("get client id: %w", err)
@@ -157,7 +157,7 @@ func (s *SubClient) do(req *http.Request) (*http.Response, error) {
 }
 
 // Subscribe creates a new Webhook subscription.
-func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*bindings.RequestStatus, error) {
+func (s *Client) Subscribe(ctx context.Context, srq *SubRequest) (*bindings.RequestStatus, error) {
 	// set default version to 1, so we can omit that parameter in request for backward compatibility
 	if srq.Version == "" {
 		return nil, ErrEmptySubscriptionVersion
@@ -200,7 +200,7 @@ func (s *SubClient) Subscribe(ctx context.Context, srq *SubRequest) (*bindings.R
 }
 
 // Unsubscribe deletes a Webhook subscription by the subscription's ID.
-func (s *SubClient) Unsubscribe(ctx context.Context, subscriptionID string) error {
+func (s *Client) Unsubscribe(ctx context.Context, subscriptionID string) error {
 	u, err := url.Parse(subscriptionsEndpoint)
 	if err != nil {
 		return fmt.Errorf("unsubscribe: parse subscriptionsEndpoint url: %w", err)
@@ -227,7 +227,7 @@ func (s *SubClient) Unsubscribe(ctx context.Context, subscriptionID string) erro
 
 // GetSubscriptions returns all EventSub subscriptions.
 // If statusFilter != StatusAny, it will apply the filter to the query.
-func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (*bindings.RequestStatus, error) {
+func (s *Client) GetSubscriptions(ctx context.Context, statusFilter Status) (*bindings.RequestStatus, error) {
 	firstRes, err := s.getSubscriptions(ctx, statusFilter, "")
 	if err != nil {
 		return nil, err
@@ -262,7 +262,7 @@ func (s *SubClient) GetSubscriptions(ctx context.Context, statusFilter Status) (
 }
 
 // Get the subscriptions with a specific pagination cursor
-func (s *SubClient) getSubscriptions(ctx context.Context, statusFilter Status, cursor string) (*bindings.RequestStatus, error) {
+func (s *Client) getSubscriptions(ctx context.Context, statusFilter Status, cursor string) (*bindings.RequestStatus, error) {
 	// First, construct the request url with the proper query parameters.
 	u, err := url.Parse(subscriptionsEndpoint)
 	if err != nil {

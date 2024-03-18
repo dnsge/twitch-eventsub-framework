@@ -15,7 +15,7 @@ const (
 )
 
 func main() {
-	handler := eventsub.NewSubHandler(true, []byte(secretKey))
+	handler := eventsub.NewHandler([]byte(secretKey))
 	handler.HandleChannelUpdate = func(h *bindings.NotificationHeaders, event *bindings.EventChannelUpdate) {
 		fmt.Println("Got a channel.update notification!")
 		fmt.Printf("Message id: %s\n", h.MessageID)
@@ -28,4 +28,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to listen: %v\n", err)
 	}
+
+	// Test it with the Twitch CLI!
+	// $ twitch event trigger channel.update -v 2 -F http://127.0.0.1:8080 -s "hey this is really secret"
 }

@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	inputFile  = flag.String("input", "", "Input file containing SubHandler definition")
+	inputFile  = flag.String("input", "", "Input file containing Handler definition")
 	outputFile = flag.String("output", "", "Output file to write handler function to")
 )
 
@@ -32,14 +32,14 @@ func main() {
 		log.Fatalf("Parse input file: %v\n", err)
 	}
 
-	// Find the SubHandler struct.
-	subHandler, ok := getSubHandler(node)
+	// Find the Handler struct.
+	handler, ok := getHandler(node)
 	if !ok {
-		log.Fatalf("Failed to find SubHandler struct in input file\n")
+		log.Fatalf("Failed to find Handler struct in input file\n")
 	}
 
-	// Analyze fields of SubHandler struct to build cases
-	cases := buildHandlerCases(subHandler)
+	// Analyze fields of Handler struct to build cases
+	cases := buildHandlerCases(handler)
 
 	// Create output file
 	output, err := os.Create(*outputFile)

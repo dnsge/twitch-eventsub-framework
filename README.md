@@ -16,11 +16,11 @@ Go 1.21+ is required.
 
 ## Quick Start
 
-Use a `SubHandler` to listen for incoming notifications from Twitch servers.
+Use a `Handler` to listen for incoming notifications from Twitch servers.
 
 ```go
-// Create my handler with verification and a secret key
-handler := eventsub.NewSubHandler(true, []byte(`my signing secret`))
+// Create my handler with no secret key verification
+handler := eventsub.NewHandler(nil)
 
 // Process channel.update EventSub notifications
 handler.HandleChannelUpdate = func(h *bindings.NotificationHeaders, event *bindings.EventChannelUpdate) {
@@ -30,13 +30,16 @@ handler.HandleChannelUpdate = func(h *bindings.NotificationHeaders, event *bindi
 
 // Listen for HTTP requests from Twitch EventSub servers
 http.ListenAndServe("127.0.0.1:8080", handler)
+
+// Test it with the Twitch CLI!
+// $ twitch event trigger channel.update -v 2 -F http://127.0.0.1:8080
 ```
 
 Use a `SubClient` to subscribe to EventSub subscriptions.
 
 ```go
 // Create a client with a ClientID and App Token
-client := eventsub.NewSubClient(eventsub.NewStaticCredentials(clientID, appToken))
+client := eventsub.NewClient(eventsub.NewStaticCredentials(clientID, appToken))
 
 // Subscribe to channel.update events for forsen
 client.Subscribe(context.Background(), &eventsub.SubRequest{

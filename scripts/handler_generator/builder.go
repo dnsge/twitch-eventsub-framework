@@ -16,20 +16,20 @@ type switchCase struct {
 	HandlerFieldName       string
 }
 
-func getSubHandler(node ast.Node) (*ast.StructType, bool) {
-	var subHandler *ast.StructType
+func getHandler(node ast.Node) (*ast.StructType, bool) {
+	var handler *ast.StructType
 	ast.Inspect(node, func(n ast.Node) bool {
 		ts, ok := n.(*ast.TypeSpec)
 		if !ok {
 			return true
 		}
-		if ts.Name.Name == "SubHandler" {
-			subHandler, _ = ts.Type.(*ast.StructType)
+		if ts.Name.Name == "Handler" {
+			handler, _ = ts.Type.(*ast.StructType)
 			return false
 		}
 		return true
 	})
-	return subHandler, subHandler != nil
+	return handler, handler != nil
 }
 
 func getTagValue(tag string, key string) (string, bool) {
@@ -41,10 +41,10 @@ func getTagValue(tag string, key string) (string, bool) {
 	return structTag.Lookup(key)
 }
 
-func buildHandlerCases(subHandler *ast.StructType) []switchCase {
+func buildHandlerCases(handler *ast.StructType) []switchCase {
 	var cases []switchCase
 
-	for _, field := range subHandler.Fields.List {
+	for _, field := range handler.Fields.List {
 		if field.Tag == nil {
 			continue
 		}
