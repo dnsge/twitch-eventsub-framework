@@ -20,7 +20,7 @@ const (
 )
 
 // EventHandler is an event callback to process a notification from EventSub.
-type EventHandler[EventMessage any] func(h *bindings.NotificationHeaders, event *EventMessage)
+type EventHandler[EventMessage any] func(*bindings.NotificationHeaders, *EventMessage)
 
 // Handler implements http.Handler to receive Twitch EventSub webhook requests.
 //
@@ -34,12 +34,13 @@ type Handler struct {
 
 	// VerifyChallenge is called to determine whether a subscription challenge
 	// should be accepted.
-	VerifyChallenge func(ctx context.Context, h *bindings.NotificationHeaders, chal *bindings.SubscriptionChallenge) bool
+	VerifyChallenge func(context.Context, *bindings.NotificationHeaders, *bindings.SubscriptionChallenge) bool
+
 	// IDTracker used to deduplicate notifications
 	IDTracker IDTracker
 	// OnDuplicateNotification is called when the provided IDTracker rejects a
 	// EventSub notification as duplicate.
-	OnDuplicateNotification func(ctx context.Context, h *bindings.NotificationHeaders)
+	OnDuplicateNotification func(context.Context, *bindings.NotificationHeaders)
 
 	HandleChannelUpdate                       EventHandler[bindings.EventChannelUpdate]                       `eventsub-type:"channel.update" eventsub-version:"2"`
 	HandleChannelFollow                       EventHandler[bindings.EventChannelFollow]                       `eventsub-type:"channel.follow" eventsub-version:"2"`
